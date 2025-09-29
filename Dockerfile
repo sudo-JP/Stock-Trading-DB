@@ -12,5 +12,6 @@ RUN cargo build
 
 COPY . .
 
+EXPOSE 8080
 
 CMD [ "cargo", "run" ]
