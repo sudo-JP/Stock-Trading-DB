@@ -1,3 +1,8 @@
+mod routes; 
+
 fn main() {
-    println("Hello from Rust");
+    let a = 1; 
+    let b = 2;
+    let d = routes::stockRoute::foo(a, b);
+    println!("Hello from Rust {}", d);
 }

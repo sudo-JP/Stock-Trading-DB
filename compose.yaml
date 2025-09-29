@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  backend:
+    build: .
+    container_name: parallel-stock-trading-db
+    ports: 
+      - "8080:8080"
+    depends_on: 
+      - postgres
+    volumes: 
+      - .:/app
+    develop:
+      watch:
+        - action: sync
+          path: .
+          target: /app
+
+  postgres:
+    image: "postgres:latest"
+    container_name: postgres
+    ports: 
+      - "27017:27017"
+    volumes: 
+      - db-data:/var/lib/postgresql/data
+
+volumes: 
+  db-data:

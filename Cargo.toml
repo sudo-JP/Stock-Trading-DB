@@ -1,0 +1,7 @@
+[package]
+name = "Parallel-Stock-Trading-DB"
+version = "0.1.0"
+authors = ["Jason Phan"]
+repository = "https://github.com/sudo-JP/Parallel-Stock-Trading-DB"
+
+[dependencies]
