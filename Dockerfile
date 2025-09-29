@@ -1,8 +1,16 @@
 FROM rust:1.67
 
 WORKDIR /usr/src/app
-COPY . .
+
+COPY Cargo.toml ./
+
+COPY ./src ./src
 
 RUN cargo install --path .
 
-CMD ["app"]
+RUN cargo build
+
+COPY . .
+
+
+CMD [ "cargo", "run" ]
