@@ -1,4 +1,7 @@
-FROM rust:1.67
+FROM rust:latest
+
+RUN rustup update stable
+RUN rustup default stable
 
 WORKDIR /usr/src/app
 
