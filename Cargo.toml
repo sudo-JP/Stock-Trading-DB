@@ -5,3 +5,22 @@ authors = ["Jason Phan"]
 repository = "https://github.com/sudo-JP/Parallel-Stock-Trading-DB"
 
 [dependencies]
+# Database 
+tokio = { version = "1.37", features = ["full"] }
+sqlx = { version = "0.7", features = ["postgres", "runtime-tokio", "macros"] }
+
+# DateTime 
+chrono = { version = "0.4", features = ["serde"] }
+
+# Endpoints 
+axum = "0.7"
+tower = "0.4"
+hyper = "0.14"
+
+# Env
+config = "0.13"
+dotenvy = "0.15" 
+
+# Error handling
+anyhow = "1.0"
+thiserror = "1.0"
