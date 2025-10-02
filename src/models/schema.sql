@@ -44,7 +44,7 @@ CREATE TABLE IF NOT EXISTS trades (
 CREATE TABLE labeled_data (
     instrument_id INTEGER REFERENCES instruments(instrument_id) ON DELETE CASCADE,
     label_id SERIAL PRIMARY KEY,
-    timestamp TIMESTAMPTZ,
+    time TIMESTAMPTZ,
     future_return_5min DECIMAL,
     future_return_1H DECIMAL,
     regime_label TEXT
@@ -52,8 +52,8 @@ CREATE TABLE labeled_data (
 
 CREATE TABLE feature_sets (
     instrument_id INTEGER REFERENCES instruments(instrument_id) ON DELETE CASCADE,
-    feature_id SERIAL PRIMARY KEY,
-    timestamp TIMESTAMPTZ,
+    feat_id SERIAL PRIMARY KEY,
+    time TIMESTAMPTZ,
     feature_vector JSONB,  -- Store all features together
     feature_version TEXT
 );
