@@ -41,7 +41,7 @@ CREATE TABLE IF NOT EXISTS trades (
     commission DECIMAL NOT NULL
 ); 
 
-CREATE TABLE labeled_data (
+CREATE TABLE IF NOT EXISTS labeled_data (
     instrument_id INTEGER REFERENCES instruments(instrument_id) ON DELETE CASCADE,
     label_id SERIAL PRIMARY KEY,
     time TIMESTAMPTZ,
@@ -50,7 +50,7 @@ CREATE TABLE labeled_data (
     regime_label TEXT
 );
 
-CREATE TABLE feature_sets (
+CREATE TABLE NOT EXISTS feature_sets (
     instrument_id INTEGER REFERENCES instruments(instrument_id) ON DELETE CASCADE,
     feat_id SERIAL PRIMARY KEY,
     time TIMESTAMPTZ,
@@ -85,7 +85,7 @@ CREATE TABLE IF NOT EXISTS technical_indicators (
     atr_14 REAL NOT NULL 
 );
 
-CREATE TABLE models (
+CREATE TABLE IF NOT EXISTS models (
     model_id SERIAL PRIMARY KEY,
     model_name TEXT,
     model_version TEXT,
