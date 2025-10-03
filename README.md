@@ -1,6 +1,6 @@
 # Parallel Stock Trading DB 
 
-Current architecture 
+Current architecture. Project still in progress so lots of empty files for now.
 ```bash
 .
 ├── Cargo.lock
