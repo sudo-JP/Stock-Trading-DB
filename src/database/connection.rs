@@ -1,3 +1,6 @@
+use sqlx::PgPool;
+use crate::repositories::{InstrumentRepository, MarketDataRepository}; 
+
 use std::error:Error;
 use sqlx::PgPool; 
 
