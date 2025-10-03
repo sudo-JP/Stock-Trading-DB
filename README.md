@@ -1,6 +1,10 @@
-# Parallel Stock Trading DB 
+# Stock Trading DB 
 
-Current architecture. Project still in progress so lots of empty files for now.
+This project connects with the other two repositories. Different repos for better encapsulation, since these projects will be run on separate Proxmox containers: 
+[Trade Frontend](https://github.com/sudo-JP/Stock-Trading-Trade)
+[ML](https://github.com/sudo-JP/Stock-Trading-ML)
+
+Current architecture. Project is still in progress, so lots of empty files for now.
 ```bash
 .
 ├── Cargo.lock
