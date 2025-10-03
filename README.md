@@ -1,6 +1,6 @@
 # Stock Trading DB 
 
-This project connects with the other two repositories. Different repos for better encapsulation, since these projects will be run on separate Proxmox containers: 
+This project is connected to the other two repositories. Different repos for better encapsulation, since these projects will be run on separate Proxmox containers: 
 [Trade Frontend](https://github.com/sudo-JP/Stock-Trading-Trade)
 [ML](https://github.com/sudo-JP/Stock-Trading-ML)
 
