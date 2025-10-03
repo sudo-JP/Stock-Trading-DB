@@ -1,6 +1,7 @@
 # Parallel Stock Trading DB 
 
 Current architecture 
+```bash
 .
 ├── Cargo.lock
 ├── Cargo.toml
@@ -33,3 +34,4 @@ Current architecture
     │   └── stockRoute.rs
     └── services
         └── stockService.rs
+```
