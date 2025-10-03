@@ -1,11 +1,17 @@
 use sqlx::PgPool;
+<<<<<<< HEAD
 use crate::repositories::{InstrumentRepository, MarketDataRepository}; 
 
 use std::error:Error;
 use sqlx::PgPool; 
+=======
+/*use crate::repositories::{InstrumentRepository, MarketDataRepository}; */
+
+//use std::error:Error;
+>>>>>>> main
 
 pub struct Database {
-    pool: PgPool 
+    pub pool: PgPool 
 }
 
 impl Database {
