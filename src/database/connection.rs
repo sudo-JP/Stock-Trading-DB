@@ -1,14 +1,38 @@
 use sqlx::PgPool;
-/*use crate::repositories::{InstrumentRepository, MarketDataRepository}; */
+use dotenvy;
 
-//use std::error:Error;
+fn format_env() -> String {
+    dotenvy::dotenv().ok(); 
+    let e: &str = "Missing .env";
+    let url: String = format!(
+        "postgres://{}:{}@{}:{}/{}",
+        std::env::var("POSTGRES_USER").expect(&e),
+        std::env::var("POSTGRES_PASSWORD").expect(&e), 
+        std::env::var("HOST").expect(&e),      
+        std::env::var("PORT").expect(&e),
+        std::env::var("POSTGRES_DB").expect(&e)
+    );
+    url
+}
+
+async fn schema_path(pool: &PgPool) -> Result<(), sqlx::Error> {
+    sqlx::migrate!("./src/models/migrations/").run(&*pool).await?;
+    Ok(())
+}
 
 pub struct Database {
     pub pool: PgPool 
 }
 
 impl Database {
-    pub fn new(pool: PgPool) -> Self {
-        Self { pool }
+    pub async fn new() -> Result<Self, Box<dyn std::error::Error>> {
+        let url = format_env(); 
+        let pool = sqlx::PgPool::connect(&url)
+        .await
+        .expect("Failed to connect to database");
+        schema_path(&pool).await?; 
+
+        Ok(Self { pool })
     }
 }
+

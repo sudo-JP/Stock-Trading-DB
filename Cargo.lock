@@ -3,22 +3,6 @@
 version = 4
 
 [[package]]
-name = "Parallel-Stock-Trading-DB"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "axum",
- "chrono",
- "config",
- "dotenvy",
- "hyper 0.14.32",
- "sqlx",
- "thiserror 1.0.69",
- "tokio",
- "tower 0.4.13",
-]
-
-[[package]]
 name = "addr2line"
 version = "0.25.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1837,6 +1821,22 @@ name = "stable_deref_trait"
 version = "1.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a8f112729512f8e442d81f95a8a7ddf2b7c6b8a1a6f509a95864142b30cab2d3"
+
+[[package]]
+name = "stock-trading-db"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "axum",
+ "chrono",
+ "config",
+ "dotenvy",
+ "hyper 0.14.32",
+ "sqlx",
+ "thiserror 1.0.69",
+ "tokio",
+ "tower 0.4.13",
+]
 
 [[package]]
 name = "stringprep"
