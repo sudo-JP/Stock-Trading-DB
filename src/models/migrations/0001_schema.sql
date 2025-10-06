@@ -50,7 +50,7 @@ CREATE TABLE IF NOT EXISTS labeled_data (
     regime_label TEXT
 );
 
-CREATE TABLE NOT EXISTS feature_sets (
+CREATE TABLE IF NOT EXISTS feature_sets (
     instrument_id INTEGER REFERENCES instruments(instrument_id) ON DELETE CASCADE,
     feat_id SERIAL PRIMARY KEY,
     time TIMESTAMPTZ,
@@ -94,9 +94,9 @@ CREATE TABLE IF NOT EXISTS models (
 );
 
 
-CREATE INDEX CONCURRENTLY idx_market_data_time_instrument ON market_data_ticks(time, instrument_id);
+CREATE INDEX idx_market_data_time_instrument ON market_data_ticks(time, instrument_id);
 
-CREATE INDEX CONCURRENTLY idx_trades_time_instrument ON trades(time, instrument_id);
+CREATE INDEX idx_trades_time_instrument ON trades(time, instrument_id);
 
-CREATE INDEX CONCURRENTLY idx_technical_indicators_time_instrument ON technical_indicators(time, instrument_id);
+CREATE INDEX idx_technical_indicators_time_instrument ON technical_indicators(time, instrument_id);
 

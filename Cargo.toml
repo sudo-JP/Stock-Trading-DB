@@ -1,5 +1,5 @@
 [package]
-name = "Stock-Trading-DB"
+name = "stock-trading-db"
 version = "0.1.0"
 authors = ["Jason Phan"]
 edition = "2021"
@@ -8,7 +8,7 @@ repository = "https://github.com/sudo-JP/Stock-Trading-DB.git"
 [dependencies]
 # Database 
 tokio = { version = "1.37", features = ["full"] }
-sqlx = { version = "0.7", features = ["postgres", "runtime-tokio", "macros"] }
+sqlx = { version = "0.7", features = ["postgres", "runtime-tokio", "macros", "migrate"] }
 
 # DateTime 
 chrono = { version = "0.4", features = ["serde"] }

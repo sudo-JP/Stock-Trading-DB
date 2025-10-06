@@ -1,4 +1,5 @@
-pub struct Instruments {
+#[derive(Debug, sqlx::FromRow)]
+pub struct Instrument {
     instrument_id: i32, 
     symbol: String, 
     name: String, 
@@ -6,5 +7,5 @@ pub struct Instruments {
     currency: String, 
     exchange: String, 
     multiplier: f32, 
-    min_tick: f32
+    min_tick: Option<f32>
 }
