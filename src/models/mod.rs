@@ -1,4 +1,6 @@
 pub mod instruments;
+pub use instruments::Instrument; 
+
 pub mod labeled_data;
 pub mod market_data_ticks;
 pub mod ml_models;
