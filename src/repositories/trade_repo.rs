@@ -54,7 +54,13 @@ impl TradeRepository {
     }
 
     async fn get_recent_trades(&self, limit: usize) -> Result<Vec<Trade>, Error> {
-
+        let trades = sqlx::query_as!(
+            Trade, 
+            "SELECT * FROM trades ORDER BY trades.time DESC LIMIT $1;", 
+            limit
+            )
+            .fetch_all(&self.pool).await?; 
+        Ok(trades)
     }
 
     async fn calculate_realized_pnl(&self, instrument_id: i32) -> Result<RealizedPnl, Error> {
