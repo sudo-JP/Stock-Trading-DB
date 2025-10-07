@@ -7,4 +7,7 @@ pub mod ml_models;
 pub mod positions;
 pub mod stock_model;
 pub mod technical_indicators;
+
 pub mod trades;
+pub use trades::Trade;
+pub use trades::RealizedPnl;
