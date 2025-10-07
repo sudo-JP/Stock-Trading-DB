@@ -32,7 +32,13 @@ impl TradeRepository {
     }
 
     async fn get_trade_by_id(&self, trade_id: i32) -> Result<Trade, Error> {
-
+        let trade = sqlx::query_as!(
+            Trade, 
+            "SELECT * FROM trades WHERE trade_id = $1;", 
+            trade_id
+            )
+            .fetch_one(&self.pool).await?;
+        Ok(trade)
     }
 
     async fn get_trades_by_instrument(&self, instrument_id: i32, start_time: DateTime<Utc>, end_time: DateTime<Utc>) -> Result <Vec<Trade>, Error> {
