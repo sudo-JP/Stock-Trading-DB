@@ -42,7 +42,15 @@ impl TradeRepository {
     }
 
     async fn get_trades_by_instrument(&self, instrument_id: i32, start_time: DateTime<Utc>, end_time: DateTime<Utc>) -> Result <Vec<Trade>, Error> {
-
+        let trades = sqlx::query_as!(
+            Trade, 
+            "SELECT * FROM trades WHERE trades.instrument_id = $1 AND trades.time >= $2 AND trades.time <= $3;", 
+            instrument_id, 
+            start_time, 
+            end_time
+            )
+            .fetch_all(&self.pool).await?;
+        Ok(trades)
     }
 
     async fn get_recent_trades(&self, limit: usize) -> Result<Vec<Trade>, Error> {
