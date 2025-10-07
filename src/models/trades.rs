@@ -1,6 +1,6 @@
 use chrono::prelude::{DateTime, Utc}; 
 
-pub struct Trades {
+pub struct Trade {
     trade_id: i32, 
     instrument_id: i32, 
     trade_type: String, 
