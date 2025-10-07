@@ -1,18 +1,11 @@
-use crate::models::Trade; 
+use crate::models::{Trade, RealizedPnl}; 
+use std::collections::VecDeque;
 
 pub struct TradeRepository {
     pool: PgPool 
 }
 
-pub struct Trade {
-    trade_id: i32, 
-    instrument_id: i32, 
-    trade_type: String, 
-    time: DateTime<Utc>, 
-    price: f32, 
-    quantity: f32, 
-    commission: f32 
-}
+
 impl TradeRepository {
     async fn create_trade(&self, trade: &Trade) -> Result<Trade, Error> {
         let result = sqlx::query_as!(
@@ -64,6 +57,23 @@ impl TradeRepository {
     }
 
     async fn calculate_realized_pnl(&self, instrument_id: i32) -> Result<RealizedPnl, Error> {
+        let trades = sqlx::query_as!(
+            Trade, 
+            "SELECT * FROM trades WHERE trades.instrument_id = $1;",
+            instrument_id
+            )
+            .fetch_all(&self.pool).await?;
+        
+        let mut queue: VecDeque<Trade> = VecDeque::new(); 
 
+        for trade in trades.iter() {
+            match trade.trade_type {
+                &"BUY" => queue.push_back(trade), 
+                &"SELL" => queue.pop_front(), 
+                _ => println!("Invalid trade type"),
+            }
+        }
+
+        Ok(pnl)
     }
 }

@@ -10,3 +10,4 @@ pub mod technical_indicators;
 
 pub mod trades;
 pub use trades::Trade;
+pub use trades::RealizedPnl;
