@@ -32,4 +32,14 @@ impl MLRepository {
             .await?;
         Ok(model)
     }
+
+    async fn get_all_models_by_name(&self, model_name: &String) -> Result<Vec<MLModel>, Error>  {
+        let models = sqlx::query_as!(
+            "SELECT * FROM models WHERE model_name = $1", 
+            model_name
+            )
+            .fetch_all(&self.pool)
+            .await?;
+        Ok(models)
+    }
 }
