@@ -9,7 +9,7 @@ pub struct MLModel {
     trained_at: DateTime<Utc> 
 }
 
-pub struct ModelPredictions {
+pub struct ModelPrediction {
     prediction_id: i32, 
     instrument_id: i32,
     time: DateTime<Utc>, 
