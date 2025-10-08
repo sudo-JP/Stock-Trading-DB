@@ -11,7 +11,8 @@ impl InstrumentRepository {
             "SELECT * FROM instruments WHERE symbol = $1;", 
             symbol 
             )
-            .fetch_one(&self.pool).await?; 
+            .fetch_one(&self.pool)
+            .await?; 
 
         Ok(instrument)   
     }
@@ -29,7 +30,8 @@ impl InstrumentRepository {
             instrument.multiplier,
             instrument.min_tick
             )
-            .fetch_one(&self.pool).await?;
+            .fetch_one(&self.pool)
+            .await?;
 
         Ok(result)
     }
@@ -39,7 +41,8 @@ impl InstrumentRepository {
             Instrument, 
             "SELECT * FROM instruments;"
             )
-            .fetch_all(&self.pool).await?;
+            .fetch_all(&self.pool)
+            .await?;
 
         Ok(all_instr)
     }

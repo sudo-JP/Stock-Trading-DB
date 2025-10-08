@@ -4,8 +4,9 @@ use crate::models::{MLModel, ModelPrediction};
 pub struct MLRepository {
     pool: PgPool
 }
+
 impl MLRepository {
-    async fn create_model(&self, ml: &Model) {
+    async fn create_model(&self, ml: &Model) -> Result<MLModel, Error> {
         let model = sqlx::query_as!(
             MLModel, 
             r#"INSERT INTO (model_name, model_version, hyperparameters, trained_at) VALUES ($1, $2, $3, $4) RETURNING *;"#,
@@ -16,5 +17,19 @@ impl MLRepository {
             )
             .fetch_one(&self.pool)
             .await?;
+
+        Ok(model)
+    }
+
+    async fn get_model_by_name_version(&self, model_name: &String, model_version: &String) -> Result<MLModel, Error> {
+        let model = sqlx::query_as!(
+            MLModel,
+            "SELECT * FROM models WHERE model_name = $1 AND model_version = $2;", 
+            model_name, 
+            model_version
+            )
+            .fetch_one(&self.pool)
+            .await?;
+        Ok(model)
     }
 }

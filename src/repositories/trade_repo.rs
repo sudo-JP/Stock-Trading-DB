@@ -19,7 +19,8 @@ impl TradeRepository {
             trade.quantity,
             trade.commission
             )
-            .fetch_one(&self.pool).await?;
+            .fetch_one(&self.pool)
+            .await?;
 
         Ok(result)
     }
@@ -30,7 +31,8 @@ impl TradeRepository {
             "SELECT * FROM trades WHERE trade_id = $1;", 
             trade_id
             )
-            .fetch_one(&self.pool).await?;
+            .fetch_one(&self.pool)
+            .await?;
         Ok(trade)
     }
 
@@ -42,7 +44,8 @@ impl TradeRepository {
             start_time, 
             end_time
             )
-            .fetch_all(&self.pool).await?;
+            .fetch_all(&self.pool)
+            .await?;
         Ok(trades)
     }
 
@@ -52,7 +55,8 @@ impl TradeRepository {
             "SELECT * FROM trades ORDER BY trades.time DESC LIMIT $1;", 
             limit
             )
-            .fetch_all(&self.pool).await?; 
+            .fetch_all(&self.pool)
+            .await?; 
         Ok(trades)
     }
 
@@ -62,7 +66,8 @@ impl TradeRepository {
             "SELECT * FROM trades WHERE trades.instrument_id = $1;",
             instrument_id
             )
-            .fetch_all(&self.pool).await?;
+            .fetch_all(&self.pool)
+            .await?;
         
         let mut queue: VecDeque<Trade> = VecDeque::new(); 
 
