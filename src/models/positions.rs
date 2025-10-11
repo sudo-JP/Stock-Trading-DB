@@ -1,4 +1,4 @@
-pub struct Positions {
+pub struct Position {
     position_id: i32, 
     instrument_id: i32, 
     quantity: f32, 
