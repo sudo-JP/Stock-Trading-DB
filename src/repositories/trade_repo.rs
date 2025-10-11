@@ -1,5 +1,6 @@
-use crate::models::{Trade, RealizedPnl}; 
+use crate::models::{Trade, RealizedPnl, PnlResult}; 
 use std::collections::VecDeque;
+use std::cmp;
 
 pub struct TradeRepository {
     pool: PgPool 
@@ -70,15 +71,71 @@ impl TradeRepository {
             .await?;
         
         let mut queue: VecDeque<Trade> = VecDeque::new(); 
-
+        let mut realized_pnl: RealizedPnl = RealizedPnl {
+            instrument_id: instrument_id.clone(), 
+            total_pnl: 0.0, 
+            total_commission: 0.0, 
+            net_pnl: 0.0, 
+            trade_count: 0
+        };
+        
+        let mut count = 0; 
         for trade in trades.iter() {
             match trade.trade_type {
-                &"BUY" => queue.push_back(trade), 
-                &"SELL" => queue.pop_front(), 
+                "BUY" => queue.push_back(trade.clone()), 
+                "SELL" => { 
+                    let result = pnl_sell(&trade, &queue)?;
+                    realized_pnl.total_pnl += result.total_pnl; 
+                    realized_pnl.net_pnl += result.net_pnl; 
+                    realized_pnl.total_commission += result.total_commission;
+                },
                 _ => println!("Invalid trade type"),
             }
+
+            count += 1; 
         }
 
-        Ok(pnl)
+        realized_pnl.trade_count = count;
+
+        Ok(realized_pnl)
     }
+}
+
+
+fn pnl_sell(trade: &Trade, queue: &mut VecDeque<Trade>) -> Result<PnlResult, Error> {
+    let mut remaining_quantity = trade.quantity;
+    let mut result: PnlResult = PnlResult {
+        total_pnl: 0,
+        net_pnl: 0,
+        total_commission: 0
+    };
+
+    while remaining_quantity > 0 && !queue.is_empty() {
+        let mut node = queue.pop_front().unwrap();
+
+        // pnl calculated by (sold price - buy price) * min(sold quantity, buy quantity)
+        let matched_quantity = cmp::min(node.quantity, remaining_quantity);
+        let pnl = (trade.price - node.price) * matched_quantity;
+
+        // Remaining sell 
+        remaining_quantity -= matched_quantity; 
+
+        // Total commission
+        let commission = (node.commission * matched_quantity / node.quantity) + (trade.commission * matched_quantity/ trade.quantity);
+
+        node.quantity -= matched_quantity; 
+
+        // update return  
+        result.net_pnl += pnl - commission; 
+        result.total_pnl += pnl;
+        result.total_commission += commission;
+
+        // Append the node back to the front of the queue 
+        if node.quantity > 0 {
+            queue.push_front(node);
+        }
+    }
+
+    Ok(result)
+
 }

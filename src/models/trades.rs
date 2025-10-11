@@ -17,3 +17,9 @@ pub struct RealizedPnl {
     net_pnl: f32,
     trade_count: i32
 }
+
+pub struct PnlResult {
+    total_pnl: f32,
+    net_pnl: f32,
+    total_commission: f32, 
+}

@@ -12,4 +12,4 @@ pub mod stock_model;
 pub mod technical_indicators;
 
 pub mod trades;
-pub use trades::{Trade, RealizedPnl};
+pub use trades::{Trade, RealizedPnl, PnlResult};
