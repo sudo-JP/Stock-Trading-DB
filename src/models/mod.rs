@@ -8,7 +8,7 @@ pub mod ml_models;
 pub use ml_models::{MLModel, ModelPrediction};
 
 pub mod positions;
-pub use positions::Position;
+pub use positions::{Position, PositionUpdate};
 
 pub mod stock_model;
 pub mod technical_indicators;
