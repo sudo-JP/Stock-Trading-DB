@@ -67,8 +67,18 @@ impl MarketDataRepository {
         instrument_id: i32,
         start_time: DateTime<Utc>,
         end_time: DateTime<Utc>,
-    ) -> Result<Vec<MarketDataTick>, Error>
-    {
+    ) -> Result<Vec<MarketDataTick>, Error> {
+        let ticks = sqlx::query_as!(
+            MarketDataTick, 
+            "SELECT * FROM market_data_ticks WHERE instrument_id = $1 AND time >= $2 AND time <= $3;", 
+            instrument_id, 
+            start_time, 
+            end_time
+            )
+            .fetch_all(&self.pool)
+            .await?;
+
+        Ok(ticks)
 
     }
 
