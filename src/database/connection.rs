@@ -8,8 +8,8 @@ fn format_env() -> String {
         "postgres://{}:{}@{}:{}/{}",
         std::env::var("POSTGRES_USER").expect(&e),
         std::env::var("POSTGRES_PASSWORD").expect(&e), 
-        std::env::var("HOST").expect(&e),      
-        std::env::var("PORT").expect(&e),
+        std::env::var("POSTGRES_HOST").expect(&e),      
+        std::env::var("POSTGRES_PORT").expect(&e),
         std::env::var("POSTGRES_DB").expect(&e)
     );
     url
