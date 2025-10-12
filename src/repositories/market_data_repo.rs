@@ -50,16 +50,18 @@ impl MarketDataRepository {
 
     }
 
-    /// Retrieve market data ticks within a time range for a specific instrument
-    ///
-    /// # Arguments
-    /// * `instrument_id` - ID of the instrument
-    /// * `start_time` - Start of time range (inclusive)
-    /// * `end_time` - End of time range (inclusive)
-    ///
-    /// # Returns
-    /// * `Ok(Vec<MarketDataTick>)` - Ticks within the specified range
-    /// * `Err(Error)` - If query fails
+    pub async fn get_recent_ticks(&self, instrument_id: i32, limit: i32) -> Result<Vec<MarketDataTick>, Error> {
+        let ticks = sqlx::query_as!(
+            MarketDataTick, 
+            "SELECT * FROM market_data_ticks WHERE instrument_id = $1 ORDER BY time DESC LIMIT $2;",
+            instrument_id, 
+            limit
+            )
+            .fetch_all(&self.pool)
+            .await?;
+        Ok(ticks)
+    }
+
     pub async fn get_ticks_by_time_range(
         &self,
         instrument_id: i32,
