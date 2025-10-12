@@ -3,6 +3,7 @@ pub use instruments::Instrument;
 
 pub mod labeled_data;
 pub mod market_data_ticks;
+pub use market_data_ticks::{MarketDataTick};
 
 pub mod ml_models;
 pub use ml_models::{MLModel, ModelPrediction};
