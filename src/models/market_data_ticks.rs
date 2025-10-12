@@ -1,6 +1,6 @@
 use chrono::prelude::{DateTime, Utc}; 
 
-pub struct MarketDataTicks {
+pub struct MarketDataTick {
     markt_data_tick_id: i32,
     time: DateTime<Utc>, 
     instrument_id: i32, 
