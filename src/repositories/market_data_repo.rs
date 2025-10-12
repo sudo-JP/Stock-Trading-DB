@@ -82,21 +82,4 @@ impl MarketDataRepository {
 
     }
 
-    /// Generate OHLC bars from tick data for a given time interval
-    ///
-    /// # Arguments
-    /// * `instrument_id` - ID of the instrument
-    /// * `interval` - Time interval for bars ("1min", "5min", "1H", "1D")
-    ///
-    /// # Returns
-    /// * `Ok(Vec<OhlcBar>)` - OHLC bars with open, high, low, close prices
-    /// * `Err(Error)` - If query fails or no data available
-    pub async fn get_ohlc_bars(
-        &self,
-        instrument_id: i32,
-        interval: &str,
-    ) -> Result<Vec<OhlcBar>, Error>
-    {
-
-    }
 }
