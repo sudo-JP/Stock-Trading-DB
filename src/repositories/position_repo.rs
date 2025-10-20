@@ -11,7 +11,7 @@ impl PositionRepository {
         Self { pool }
     }
 
-    async fn get_position_by_instrument(&self, instrument_id: i32) -> Result<Position, sqlx::Error> {
+    pub async fn get_position_by_instrument(&self, instrument_id: i32) -> Result<Position, sqlx::Error> {
         let position = sqlx::query_as::<sqlx::Postgres, Position>(
             "SELECT * FROM positions WHERE instrument_id = $1;" 
             )
@@ -24,7 +24,7 @@ impl PositionRepository {
 
 
     // Archive the position by setting the quantity to 0 
-    async fn close_position(&self, instrument_id: i32) -> Result<bool, sqlx::Error> {
+    pub async fn close_position(&self, instrument_id: i32) -> Result<bool, sqlx::Error> {
         let result = sqlx::query("UPDATE positions SET quantity = 0 WHERE positions.instrument_id = $1;"
             )
             .bind(instrument_id)
@@ -34,7 +34,7 @@ impl PositionRepository {
         Ok(result.rows_affected() > 0)
     }
 
-    async fn update_position(&self, update: PositionUpdate) -> Result<Position, Error> {
+    pub async fn update_position(&self, update: PositionUpdate) -> Result<Position, Error> {
         let position = sqlx::query_as::<sqlx::Postgres, Position>(
             "SELECT * FROM positions WHERE instrument_id = $1;")
             .bind(update.instrument_id)

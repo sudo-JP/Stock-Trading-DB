@@ -9,65 +9,59 @@ pub struct TradeRepository {
 
 
 impl TradeRepository {
-    async fn create(&self, trade: &Trade) -> Result<Trade, Error> {
-        let result = sqlx::query_as!(
-            Trade, 
-            r#"INSERT INTO trades (instrument_id, trade_type, time, price, quantity, commission) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *;"#
-            
-            trade.instrument_id,
-            trade.trade_type,
-            trade.time,
-            trade.price,
-            trade.quantity,
-            trade.commission
+    pub async fn create(&self, trade: &Trade) -> Result<bool, sqlx::Error> {
+        let result = sqlx::query(
+            r#"INSERT INTO trades (instrument_id, trade_type, time, price, quantity, commission) VALUES ($1, $2, $3, $4, $5, $6);"#
             )
-            .fetch_one(&self.pool)
+            .bind(trade.instrument_id)
+            .bind(&trade.trade_type)
+            .bind(trade.time)
+            .bind(trade.price)
+            .bind(trade.quantity)
+            .bind(trade.commission)
+            .execute(&self.pool)
             .await?;
 
-        Ok(result)
+        Ok(result.rows_affected() > 0)
     }
 
-    async fn get_trade_by_id(&self, trade_id: i32) -> Result<Trade, Error> {
-        let trade = sqlx::query_as!(
-            Trade, 
-            "SELECT * FROM trades WHERE trade_id = $1;", 
-            trade_id
+    pub async fn get_trade_by_id(&self, trade_id: i32) -> Result<Trade, sqlx::Error> {
+        let trade = sqlx::query_as::<sqlx::Postgres, Trade>(
+            "SELECT * FROM trades WHERE trade_id = $1;"
             )
+            .bind(trade_id)
             .fetch_one(&self.pool)
             .await?;
         Ok(trade)
     }
 
-    async fn get_trades_by_instrument(&self, instrument_id: i32, start_time: DateTime<Utc>, end_time: DateTime<Utc>) -> Result <Vec<Trade>, Error> {
-        let trades = sqlx::query_as!(
-            Trade, 
+    pub async fn get_trades_by_instrument(&self, instrument_id: i32, start_time: DateTime<Utc>, end_time: DateTime<Utc>) -> Result <Vec<Trade>, Error> {
+        let trades = sqlx::query_as::<sqlx::Postgres, Trade>(
             "SELECT * FROM trades WHERE trades.instrument_id = $1 AND trades.time >= $2 AND trades.time <= $3;", 
-            instrument_id, 
-            start_time, 
-            end_time
             )
+            .bind(instrument_id)
+            .bind(start_time)
+            .bind(end_time)
             .fetch_all(&self.pool)
             .await?;
         Ok(trades)
     }
 
-    async fn get_recent_trades(&self, limit: usize) -> Result<Vec<Trade>, Error> {
-        let trades = sqlx::query_as!(
-            Trade, 
+    pub async fn get_recent_trades(&self, limit: i32) -> Result<Vec<Trade>, Error> {
+        let trades = sqlx::query_as::<sqlx::Postgres, Trade>(
             "SELECT * FROM trades ORDER BY trades.time DESC LIMIT $1;", 
-            limit
             )
+            .bind(limit)
             .fetch_all(&self.pool)
             .await?; 
         Ok(trades)
     }
 
-    async fn calculate_realized_pnl(&self, instrument_id: i32) -> Result<RealizedPnl, Error> {
-        let trades = sqlx::query_as!(
-            Trade, 
-            "SELECT * FROM trades WHERE trades.instrument_id = $1;",
-            instrument_id
+    pub async fn calculate_realized_pnl(&self, instrument_id: i32) -> Result<RealizedPnl, Error> {
+        let trades = sqlx::query_as::<sqlx::Postgres, Trade>(
+            "SELECT * FROM trades WHERE trades.instrument_id = $1;"
             )
+            .bind(instrument_id)
             .fetch_all(&self.pool)
             .await?;
         
@@ -81,11 +75,11 @@ impl TradeRepository {
         };
         
         let mut count = 0; 
-        for trade in trades.iter() {
-            match trade.trade_type {
-                "BUY" => queue.push_back(trade.clone()), 
+        for trade in trades.into_iter() {
+            match trade.trade_type.as_str() {
+                "BUY" => queue.push_back(trade),
                 "SELL" => { 
-                    let result = pnl_sell(&trade, &queue)?;
+                    let result = pnl_sell(&trade, &mut queue)?;
                     realized_pnl.total_pnl += result.total_pnl; 
                     realized_pnl.net_pnl += result.net_pnl; 
                     realized_pnl.total_commission += result.total_commission;
@@ -106,16 +100,16 @@ impl TradeRepository {
 fn pnl_sell(trade: &Trade, queue: &mut VecDeque<Trade>) -> Result<PnlResult, Error> {
     let mut remaining_quantity = trade.quantity;
     let mut result: PnlResult = PnlResult {
-        total_pnl: 0,
-        net_pnl: 0,
-        total_commission: 0
+        total_pnl: 0.0,
+        net_pnl: 0.0,
+        total_commission: 0.0
     };
 
-    while remaining_quantity > 0 && !queue.is_empty() {
+    while remaining_quantity > 0.0 && !queue.is_empty() {
         let mut node = queue.pop_front().unwrap();
 
         // pnl calculated by (sold price - buy price) * min(sold quantity, buy quantity)
-        let matched_quantity = cmp::min(node.quantity, remaining_quantity);
+        let matched_quantity = node.quantity.min(remaining_quantity);
         let pnl = (trade.price - node.price) * matched_quantity;
 
         // Remaining sell 
@@ -132,7 +126,7 @@ fn pnl_sell(trade: &Trade, queue: &mut VecDeque<Trade>) -> Result<PnlResult, Err
         result.total_commission += commission;
 
         // Append the node back to the front of the queue 
-        if node.quantity > 0 {
+        if node.quantity > 0.0 {
             queue.push_front(node);
         }
     }
