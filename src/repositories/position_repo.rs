@@ -5,7 +5,24 @@ pub struct PositionRepository {
 }
 
 
+pub struct Position {
+    position_id: i32, 
+    instrument_id: i32, 
+    quantity: f32, 
+    average_cost: f32, 
+    unrealized_pnl: f32
+}
 impl PositionRepository {
+    /*async fn create_posititon(&self, position: &Position) -> Result<>{
+        let position = sqlx::query_as!(
+
+            )
+            .fetch_one(&self.pool) 
+            .await?;
+
+        Ok(position)
+    }*/
+
     async fn get_position_by_instrument(&self, instrument_id: i32) -> Result<Position, Error> {
         let position = sqlx::query_as!(
             Position, 

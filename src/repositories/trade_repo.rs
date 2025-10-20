@@ -8,7 +8,7 @@ pub struct TradeRepository {
 
 
 impl TradeRepository {
-    async fn create_trade(&self, trade: &Trade) -> Result<Trade, Error> {
+    async fn create(&self, trade: &Trade) -> Result<Trade, Error> {
         let result = sqlx::query_as!(
             Trade, 
             r#"INSERT INTO trades (instrument_id, trade_type, time, price, quantity, commission) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *;"#

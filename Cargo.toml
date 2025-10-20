@@ -1,5 +1,5 @@
 [package]
-name = "stock-trading-db"
+name = "stock_trading_db"
 version = "0.1.0"
 authors = ["Jason Phan"]
 edition = "2021"
