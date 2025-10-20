@@ -1,16 +1,16 @@
-use chrono::prelude::{DateTime, Utc}; 
 
+#[derive(Debug, sqlx::FromRow)]
 pub struct TechnicalIndicators {
-    tech_ind_id: i32, 
-    instrument_id: i32, 
-    time: DateTime<Utc>, 
-    sma_20: f32, 
-    ema_12: f32, 
-
-    rsi_14: f32, 
-    macd: f32, 
-
-    bollinger_upper: f32, 
-    bollinger_lower: f32,
-    atr_14: f32 
+    pub tech_ind_id: i32, 
+    pub instrument_id: i32, 
+    pub time: DateTime<Utc>, 
+    pub sma_20: f32, 
+    pub ema_12: f32, 
+ 
+    pub rsi_14: f32, 
+    pub macd: f32, 
+ 
+    pub bollinger_upper: f32, 
+    pub bollinger_lower: f32,
+    pub atr_14: f32 
 }
