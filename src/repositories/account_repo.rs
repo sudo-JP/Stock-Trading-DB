@@ -30,5 +30,14 @@ impl AccountRepository {
 
         Ok(result.rows_affected() > 0)
     }
+
+    pub async fn delete_account_by_id(&self, account_id: &str) -> Result<bool, sqlx::Error> {
+        let result = sqlx::query("DELETE FROM account WHERE account_id = $1;")
+            .bind(account_id)
+            .execute(&self.pool)
+            .await?;
+
+        Ok(result.rows_affected() > 0)
+    }
 }
 
