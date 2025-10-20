@@ -1,18 +1,19 @@
-use std::collections::HashMap;
-use chrono::prelude::{DateTime, Utc}; 
+use crate::models::prelude_model::*;
 
+#[derive(Debug, sqlx::FromRow)]
 pub struct MLModel {
-    model_id: i32, 
-    model_name: String, 
-    model_version: String, 
-    hyperparameters: HashMap<String, String>,
-    trained_at: DateTime<Utc> 
+    pub model_id: i32, 
+    pub model_name: String, 
+    pub model_version: String, 
+    pub hyperparameters: HashMap<String, String>,
+    pub trained_at: DateTime<Utc> 
 }
 
+#[derive(Debug, sqlx::FromRow)]
 pub struct ModelPrediction {
-    prediction_id: i32, 
-    instrument_id: i32,
-    time: DateTime<Utc>, 
-    prediction_value: f32, 
-    confidence: f32 
+    pub prediction_id: i32, 
+    pub instrument_id: i32,
+    pub time: DateTime<Utc>, 
+    pub prediction_value: f32, 
+    pub confidence: f32 
 }

@@ -1,14 +1,17 @@
+
+#[derive(Debug, sqlx::FromRow)]
 pub struct Position {
-    position_id: i32, 
-    instrument_id: i32, 
-    quantity: f32, 
-    average_cost: f32, 
-    unrealized_pnl: f32
+    pub position_id: i32, 
+    pub instrument_id: i32, 
+    pub quantity: f32, 
+    pub average_cost: f32, 
+    pub unrealized_pnl: f32
 }
 
+#[derive(Debug, sqlx::FromRow)]
 pub struct PositionUpdate {
-    instrument_id: i32, 
-    quantity_change: f32, 
-    trade_price: f32, 
-    commission: f32
+    pub instrument_id: i32, 
+    pub quantity_change: f32, 
+    pub trade_price: f32, 
+    pub commission: f32
 }

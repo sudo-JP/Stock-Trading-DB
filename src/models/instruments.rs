@@ -1,11 +1,11 @@
 #[derive(Debug, sqlx::FromRow)]
 pub struct Instrument {
-    instrument_id: i32, 
-    symbol: String, 
-    name: String, 
-    instr_type: String, 
-    currency: String, 
-    exchange: String, 
-    multiplier: f32, 
-    min_tick: Option<f32>
+    pub instrument_id: i32, 
+    pub symbol: String, 
+    pub name: String, 
+    pub instr_type: String, 
+    pub currency: String, 
+    pub exchange: String, 
+    pub multiplier: f32, 
+    pub min_tick: Option<f32>
 }
