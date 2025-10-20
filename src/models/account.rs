@@ -1,5 +1,7 @@
+use crate::models::prelude_model::*;
+
 #[derive(Debug, sqlx::FromRow)]
-struct Account {
+pub struct Account {
     pub account_id: String, 
     pub currency: String, 
     pub buying_power: f32, 

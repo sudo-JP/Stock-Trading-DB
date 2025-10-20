@@ -16,8 +16,7 @@ impl MarketDataRepository {
         let mut volume_vec: Vec<i32> = vec::new();
 
         for tick in ticks {
-            time_vec.push(tick.time);
-            instr_vec.push(tick.instrument_id);
+            time_vec.push(tick.time); instr_vec.push(tick.instrument_id);
             bid_price_vec.push(tick.bid_price);
             bid_size_vec.push(tick.bid_size);
             ask_price_vec.push(tick.ask_price);

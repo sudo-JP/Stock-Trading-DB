@@ -1,4 +1,5 @@
-use crate::models::{Position, PositionUpdate};
+use crate::models::positions::Position; 
+use crate::repositories::prelude_repo::*;
 
 pub struct PositionRepository {
     pool: PgPool 

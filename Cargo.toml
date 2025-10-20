@@ -8,7 +8,7 @@ repository = "https://github.com/sudo-JP/Stock-Trading-DB.git"
 [dependencies]
 # Database 
 tokio = { version = "1.37", features = ["full"] }
-sqlx = { version = "0.7", features = ["postgres", "runtime-tokio", "macros", "migrate"] }
+sqlx = { version = "0.7", features = ["postgres", "runtime-tokio", "macros", "migrate", "chrono"] }
 
 # DateTime 
 chrono = { version = "0.4", features = ["serde"] }

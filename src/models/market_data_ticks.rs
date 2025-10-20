@@ -1,3 +1,5 @@
+use crate::models::prelude_model::*;
+
 #[derive(Debug, sqlx::FromRow)]
 pub struct MarketDataTick {
     pub markt_data_tick_id: i32,

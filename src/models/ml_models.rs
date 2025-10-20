@@ -1,5 +1,4 @@
-use std::collections::HashMap;
-use chrono::prelude::{DateTime, Utc}; 
+use crate::models::prelude_model::*;
 
 #[derive(Debug, sqlx::FromRow)]
 pub struct MLModel {

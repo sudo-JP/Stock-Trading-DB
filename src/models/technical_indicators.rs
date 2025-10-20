@@ -1,3 +1,4 @@
+use crate::models::prelude_model::*;
 
 #[derive(Debug, sqlx::FromRow)]
 pub struct TechnicalIndicators {

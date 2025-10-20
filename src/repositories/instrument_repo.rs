@@ -1,5 +1,5 @@
 use crate::models::instruments::Instrument; 
-use crate::repositories::prelude::*;
+use crate::repositories::prelude_repo::*;
 
 
 pub struct InstrumentRepository {
@@ -10,7 +10,8 @@ impl InstrumentRepository {
     pub fn new(pool: PgPool) -> Self {
         Self { pool }
     }
-    pub async fn find_by_symbol(&self, symbol: &str) -> Result<Instrument, Error> {
+
+    pub async fn find_by_symbol(&self, symbol: &str) -> Result<Instrument, sqlx::Error> {
         let instrument = sqlx::query_as::<sqlx::Postgres, Instrument>( 
             "SELECT * FROM instruments WHERE symbol = $1;"
             )
@@ -21,9 +22,9 @@ impl InstrumentRepository {
         Ok(instrument)   
     }
 
-    pub async fn create(&self, instrument: &Instrument) -> Result<Instrument, Error> {
-        let result = sqlx::query_as::<sqlx::Postgres, Instrument>(
-            r#"INSERT INTO instruments (symbol, name, instr_type, currency, exchange, multiplier, min_tick) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *;"#
+    pub async fn create(&self, instrument: &Instrument) -> Result<bool, sqlx::Error> {
+        let result = sqlx::query(
+            r#"INSERT INTO instruments (symbol, name, instr_type, currency, exchange, multiplier, min_tick) VALUES ($1, $2, $3, $4, $5, $6, $7);"#
             )
             .bind(&instrument.symbol)
             .bind(&instrument.name)
@@ -32,13 +33,13 @@ impl InstrumentRepository {
             .bind(&instrument.exchange)
             .bind(&instrument.multiplier)
             .bind(&instrument.min_tick)
-            .fetch_one(&self.pool)
+            .execute(&self.pool)
             .await?;
 
-        Ok(result)
+        Ok(result.rows_affected() > 0)
     }
 
-    pub async fn list_all(&self) -> Result<Vec<Instrument>, Error> {
+    pub async fn list_all(&self) -> Result<Vec<Instrument>, sqlx::Error> {
         let all_instr = sqlx::query_as::<sqlx::Postgres, Instrument>(
             "SELECT * FROM instruments;"
             )
