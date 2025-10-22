@@ -19,16 +19,16 @@ fn format_env() -> String {
     network
 }
 
-pub struct TCPServer {
+pub struct CppTCPServer {
     listener: TcpListener,
 }
 
-unsafe fn handle_stream(mut stream: TcpStream) -> Result <(), Error> {
+fn handle_stream(mut stream: TcpStream) -> Result <(), Error> {
     let header: usize = size_of::<cpp_protocols::BinaryMessage>(); 
     let mut buffer = vec![0u8; header]; // Filed out buffer with 0 
 
     let header = match stream.read_exact(&mut buffer) {
-        Ok(_) => { cpp_protocols::deserialize_header_cpp(&buffer); }
+        Ok(_) => { cpp_protocols::deserialize_header_cpp(&buffer) }
         Err(e) => { panic!("Error handling stream {}", e); }
     };
 
@@ -36,14 +36,14 @@ unsafe fn handle_stream(mut stream: TcpStream) -> Result <(), Error> {
     Ok(())
 }
 
-impl TCPServer {
+impl CppTCPServer {
     pub fn new() -> Result<Self, Box<dyn std::error::Error>> {
         let network = format_env();
         let listener = TcpListener::bind(network)?;
         Ok(Self { listener })
     }
 
-    pub unsafe fn receive_data(&self) -> Result<(), Error> {
+    pub fn receive_data(&self) -> Result<(), Error> {
 
         for stream in self.listener.incoming() {
             let stream = stream.unwrap();

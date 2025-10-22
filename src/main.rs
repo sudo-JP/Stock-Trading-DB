@@ -1,4 +1,4 @@
-use networking::server; 
+use networking::CppTCPServer; 
 use stock_trading_db::*;
 use crate::models::instruments::Instrument;
 
@@ -24,7 +24,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         Err(_) => println!("Database timeout - check connection string"),
     }*/
 
-    let server = TCPServer::new()?;
+    let server = CppTCPServer::new()?;
     server.receive_data()?;
 
     Ok(())

@@ -1,4 +1,7 @@
-use byteorder::{LittleEndian};
+use std::io::Cursor;
+
+use anyhow::{Result, bail};
+use byteorder::{BigEndian, ReadBytesExt};
 
 #[repr(C, packed)]
 pub struct BinaryMessage {
@@ -114,14 +117,23 @@ struct AccountBinaryPayload {
 
 
 // Deserialize 
-pub unsafe fn deserialize_header_cpp(header: &[u8]) -> () {
+pub fn deserialize_header_cpp(header: &[u8]) -> Result<BinaryMessage> {
     // Binary length checking 
-    if header.len() != size_of()
-    let ptr = header.as_ptr();
-    let bin_read = ptr.read_unaligned(); 
+    if header.len() != size_of::<BinaryMessage>() {
+        bail!("Failed to deserialize header, header size mismatch");
+    }
 
-    //bin_read
-    
+    let mut reader = Cursor::new(header); 
+    let sql = reader.read_u32::<BigEndian>()?;
+    let table = reader.read_u32::<BigEndian>()?;
+    let timestamp = reader.read_u64::<BigEndian>()?;
+    let data_size = reader.read_u32::<BigEndian>()?; 
+
+    Ok(BinaryMessage {
+        sql_command: sql, 
+        table: table, 
+        timestamp: timestamp, 
+        data_size: data_size} )
 }
 
 pub unsafe fn deserialize_data_cpp(header: &BinaryMessage, packet: &[u8]) -> () {
