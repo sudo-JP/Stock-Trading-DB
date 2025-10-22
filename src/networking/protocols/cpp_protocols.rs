@@ -1,5 +1,7 @@
+use byteorder::{LittleEndian};
+
 #[repr(C, packed)]
-struct BinaryMessage {
+pub struct BinaryMessage {
     sql_command: u32,
     table: u32, 
     timestamp: u64,
@@ -99,7 +101,7 @@ struct AccountBinaryPayload {
     
     buying_power: f64,
     cash: f64,
-    portfolio_value: f64,
+    portfolio_value: f64, 
     equity: f64,
 
     // Performance
@@ -108,4 +110,22 @@ struct AccountBinaryPayload {
 
     status: i32, 
     last_update: i64
+}
+
+
+// Deserialize 
+pub unsafe fn deserialize_header_cpp(header: &[u8]) -> () {
+    // Binary length checking 
+    if header.len() != size_of()
+    let ptr = header.as_ptr();
+    let bin_read = ptr.read_unaligned(); 
+
+    //bin_read
+    
+}
+
+pub unsafe fn deserialize_data_cpp(header: &BinaryMessage, packet: &[u8]) -> () {
+    let ptr = packet.as_ptr();
+    let bin_read = ptr.read_unaligned(); 
+    
 }
