@@ -1,4 +1,7 @@
 use dotenvy;
+use usize;
+
+use anyhow::{Result, bail};
 use std::{
     io::{Read, Error},
     net::{TcpListener, TcpStream},
@@ -23,15 +26,21 @@ pub struct CppTCPServer {
     listener: TcpListener,
 }
 
-fn handle_stream(mut stream: TcpStream) -> Result <(), Error> {
+fn handle_stream(mut stream: TcpStream) -> Result <()> {
+    // First read the header
     let header: usize = size_of::<cpp_protocols::BinaryMessage>(); 
-    let mut buffer = vec![0u8; header]; // Filed out buffer with 0 
+    let mut buffer = vec![0u8; header]; // Filed out buffer with 0 for header 
 
-    let header = match stream.read_exact(&mut buffer) {
-        Ok(_) => { cpp_protocols::deserialize_header_cpp(&buffer) }
-        Err(e) => { panic!("Error handling stream {}", e); }
-    };
+    // Second, deserialize the header to find the remaining size 
+    stream.read_exact(&mut buffer)?;
+    let header = cpp_protocols::deserialize_header_cpp(&buffer)?;
 
+    // Now, read number of data from stream
+    let data_size: usize = usize::try_from(header.data_size)?;
+    let mut buffer = vec![0u8; data_size]; // Filed out buffer with 0 for body
+    //let body = cpp_protocols::deserialize_data_cpp(&header, &buffer)?;
+
+    //let body_data = cpp_protocols::deserialize_data_cpp(&header, )
     
     Ok(())
 }

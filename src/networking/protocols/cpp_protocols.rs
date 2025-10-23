@@ -5,10 +5,10 @@ use byteorder::{BigEndian, ReadBytesExt};
 
 #[repr(C, packed)]
 pub struct BinaryMessage {
-    sql_command: u32,
-    table: u32, 
-    timestamp: u64,
-    data_size: u32
+    pub sql_command: u32,
+    pub table: u32, 
+    pub timestamp: u64,
+    pub data_size: u32
 } 
 
 #[repr(u32)]
@@ -24,7 +24,7 @@ enum SQLTable {
     ACCOUNT = 1, 
     ORDER = 2, 
     POSITION = 3, 
-    INSTRUMENT = 4
+    ASSET = 4
 }
 
 #[repr(u32)]
@@ -116,6 +116,7 @@ struct AccountBinaryPayload {
 }
 
 
+
 // Deserialize 
 pub fn deserialize_header_cpp(header: &[u8]) -> Result<BinaryMessage> {
     // Binary length checking 
@@ -136,8 +137,69 @@ pub fn deserialize_header_cpp(header: &[u8]) -> Result<BinaryMessage> {
         data_size: data_size} )
 }
 
-pub unsafe fn deserialize_data_cpp(header: &BinaryMessage, packet: &[u8]) -> () {
-    let ptr = packet.as_ptr();
-    let bin_read = ptr.read_unaligned(); 
+impl SQLTable {
+    pub fn from_u32(num: u32) -> Option<SQLTable> {
+        match num {
+            1 => Some(SQLTable::ACCOUNT), 
+            2 => Some(SQLTable::ORDER), 
+            3 => Some(SQLTable::POSITION), 
+            4 => Some(SQLTable::ASSET),
+            _ => None
+        }
+
+    }
+}
+
+// compile safety for usize
+fn read_bin_arr<const N: usize>(reader: &mut Cursor<&[u8]>) -> Result<[u8; N]> {
+    let arr = [0u8; N];
+    reader.read_exact(&mut arr)?;
+    Ok(arr)
+}
+
+fn deserialize_account(packet: &[u8]) -> Result<OrderBinaryPayload> {
+
+    bail!("")
+}
+
+fn deserialize_order(packet: &[u8]) -> Result<PositionBinaryPayload> {
+
+    bail!("")
+}
+
+fn deserialize_position(packet: &[u8]) -> Result<AccountBinaryPayload> {
+
+    bail!("")
+}
+
+
+pub fn deserialize_asset(packet: &[u8]) -> Result<AssetBinaryPayload> {
+    let mut reader = Cursor::new(packet)?; 
+    let id = read_bin_arr<64>(&mut reader)?;
+    let asset_class = read_bin_arr<16>(&mut reader)?;
+    let exchange = read_bin_arr<16>(&mut reader)?; 
+    let symbol = read_bin_arr<16>(&mut reader)?; 
+    let name = read_bin_arr<32>(&mut reader)?; 
+    let status = reader.read_u32::<BigEndian>()?;
+    let tradeable = reader.read_u8::<BigEndian>()?;
+    let marginable = reader.read_u8::<BigEndian>()?;
+    let shortable = reader.read_u8::<BigEndian>()?;
+    let easy_to_borrow = reader.read_u8::<BigEndian>()?;
+    let fractionable = reader.read_u8::<BigEndian>()?;
+
+    Ok(AssetBinaryPayload{
+        id: id, 
+        asset_class: asset_class, 
+        exchange: exchange, 
+        symbol: symbol, 
+        name: name, 
+        status: status, 
+        tradeable: tradeable, 
+        marginable: marginable, 
+        shortable: shortable, 
+        easy_to_borrow: easy_to_borrow, 
+        fractionable: fractionable, 
+    })
     
 }
+
