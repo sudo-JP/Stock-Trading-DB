@@ -26,3 +26,5 @@ dotenvy = "0.15"
 anyhow = "1.0"
 thiserror = "1.0"
 
+# Byte reading 
+byteorder = "1"
