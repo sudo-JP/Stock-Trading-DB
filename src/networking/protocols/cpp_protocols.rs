@@ -150,8 +150,6 @@ impl SQLTable {
     }
 }
 
-// compile safety for usize
-
 
 pub fn deserialize_account(packet: &[u8]) -> Result<AccountBinaryPayload> {
     let mut reader = Cursor::new(packet); 
@@ -186,32 +184,49 @@ pub fn deserialize_account(packet: &[u8]) -> Result<AccountBinaryPayload> {
     })
 }
 
-fn deserialize_order(packet: &[u8]) -> Result<PositionBinaryPayload> {
 
-    bail!("")
+fn deserialize_order(packet: &[u8]) -> Result<OrderBinaryPayload> {
+    let mut reader = Cursor::new(packet); 
+    let mut id = [0u8; 64];
+    reader.read_exact(&mut id)?;
+
+    let mut client_order_id = [0u8; 64]; 
+    reader.read_exact(&mut client_order_id)?; 
+
+    let created_at = reader.read_u64::<LittleEndian>()?;
+    let updated_at = reader.read_u64::<LittleEndian>()?;
+    let submitted_at = reader.read_u64::<LittleEndian>()?;
+    let filled_at = reader.read_u64::<LittleEndian>()?;
+
+    let mut symbol = [0u8; 16]; 
+    reader.read_exact(&mut symbol)?;
+
+    let mut side = [0u8; 8]; 
+    reader.read_exact(&mut side)?; 
+
+    let mut type_order = [0u8; 16]; 
+    reader.read_exact(&mut type_order)?;
+
+    let time_in_force = reader.read_u64::<LittleEndian>()?;
+    let filled_qty = reader.read_u32::<LittleEndian>()?;
+    let filled_avg_price = reader.read_f32::<LittleEndian>()?;
+
+    Ok(OrderBinaryPayload{
+        id: id, 
+        client_order_id: client_order_id, 
+        created_at: created_at, 
+        updated_at: updated_at, 
+        submitted_at: submitted_at, 
+        filled_at: filled_at, 
+        symbol: symbol, 
+        side: side, 
+        type_order: type_order, 
+        time_in_force: time_in_force, 
+        filled_qty: filled_qty, 
+        filled_avg_price: filled_avg_price
+    })
 }
 
-struct PositionBinaryPayload {
-    pub asset_id: [u8; 64],
-    pub symbol: [u8; 16],
-    pub exchange: [u8; 16], 
-    pub asset_class: [u8; 16],
-
-    pub qty: u32,
-    pub avg_entry_price: f64, 
-    
-    pub side: [u8; 8], 
-    pub market_value: f64,
-    pub cost_basis: f64, 
-    
-    pub unrealized_pl: f64,
-    pub unrealized_plpc: f64,
-    pub unrealized_intraday_pl: f64,
-    pub unrealized_intraday_plpc: f64,
-    pub current_price: f64,
-    pub lastday_price: f64,
-    pub change_today: f64,
-}
 fn deserialize_position(packet: &[u8]) -> Result<PositionBinaryPayload> {
     let mut reader = Cursor::new(packet); 
     let mut asset_id = [0u8; 64];
