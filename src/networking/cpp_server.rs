@@ -3,11 +3,11 @@ use usize;
 
 use anyhow::{Result, bail};
 use std::{
-    io::{Read, Error},
+    io::{BufReader, BufRead, Read, Error, ErrorKind},
     net::{TcpListener, TcpStream},
     mem::{size_of}
 }; 
-use crate::networking::protocols::cpp_protocols;
+use crate::{networking::protocols::cpp_protocols, protocols::AccountBinaryPayload};
 
 
 
@@ -28,16 +28,23 @@ pub struct CppTCPServer {
 
 fn handle_stream(mut stream: TcpStream) -> Result <()> {
     // First read the header
+
     let header: usize = size_of::<cpp_protocols::BinaryMessage>(); 
     let mut buffer = vec![0u8; header]; // Filed out buffer with 0 for header 
 
     // Second, deserialize the header to find the remaining size 
     stream.read_exact(&mut buffer)?;
     let header = cpp_protocols::deserialize_header_cpp(&buffer)?;
+    let data_size: usize = usize::try_from(header.data_size)?;
+
+
+    // Get the data 
+    let mut buffer = vec![0u8; data_size]; // Filed out buffer with 0 for body
+    stream.read_exact(&mut buffer)?;
+    
+    let d: AccountBinaryPayload = cpp_protocols::deserialize_account(&buffer)?;
 
     // Now, read number of data from stream
-    let data_size: usize = usize::try_from(header.data_size)?;
-    let mut buffer = vec![0u8; data_size]; // Filed out buffer with 0 for body
     //let body = cpp_protocols::deserialize_data_cpp(&header, &buffer)?;
 
     //let body_data = cpp_protocols::deserialize_data_cpp(&header, )

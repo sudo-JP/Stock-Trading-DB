@@ -1,7 +1,7 @@
-use std::io::Cursor;
+use std::io::{Cursor, Read};
 
 use anyhow::{Result, bail};
-use byteorder::{BigEndian, ReadBytesExt};
+use byteorder::{LittleEndian, ReadBytesExt};
 
 #[repr(C, packed)]
 pub struct BinaryMessage {
@@ -98,21 +98,21 @@ struct PositionBinaryPayload {
 }
 
 #[repr(C, packed)]
-struct AccountBinaryPayload {
-    account_id: [u8; 64],
-    currency: [u8; 4], 
+pub struct AccountBinaryPayload {
+    pub account_id: [u8; 64],
+    pub currency: [u8; 4], 
     
-    buying_power: f64,
-    cash: f64,
-    portfolio_value: f64, 
-    equity: f64,
+    pub buying_power: f64,
+    pub cash: f64,
+    pub portfolio_value: f64, 
+    pub equity: f64,
 
     // Performance
-    unrealized_pl: f64,
-    realized_pl: f64,
+    pub unrealized_pl: f64,
+    pub realized_pl: f64,
 
-    status: i32, 
-    last_update: i64
+    pub status: i32, 
+    pub last_update: i64
 }
 
 
@@ -125,10 +125,10 @@ pub fn deserialize_header_cpp(header: &[u8]) -> Result<BinaryMessage> {
     }
 
     let mut reader = Cursor::new(header); 
-    let sql = reader.read_u32::<BigEndian>()?;
-    let table = reader.read_u32::<BigEndian>()?;
-    let timestamp = reader.read_u64::<BigEndian>()?;
-    let data_size = reader.read_u32::<BigEndian>()?; 
+    let sql = reader.read_u32::<LittleEndian>()?;
+    let table = reader.read_u32::<LittleEndian>()?;
+    let timestamp = reader.read_u64::<LittleEndian>()?;
+    let data_size = reader.read_u32::<LittleEndian>()?; 
 
     Ok(BinaryMessage {
         sql_command: sql, 
@@ -151,15 +151,39 @@ impl SQLTable {
 }
 
 // compile safety for usize
-fn read_bin_arr<const N: usize>(reader: &mut Cursor<&[u8]>) -> Result<[u8; N]> {
-    let arr = [0u8; N];
-    reader.read_exact(&mut arr)?;
-    Ok(arr)
-}
 
-fn deserialize_account(packet: &[u8]) -> Result<OrderBinaryPayload> {
 
-    bail!("")
+pub fn deserialize_account(packet: &[u8]) -> Result<AccountBinaryPayload> {
+    let mut reader = Cursor::new(packet); 
+    let mut account_id = [0u8; 64];
+    reader.read_exact(&mut account_id)?;
+
+    let mut currency = [0u8; 4]; 
+    reader.read_exact(&mut currency)?;
+    let buying_power = reader.read_f64::<LittleEndian>()?;  
+
+    let cash = reader.read_f64::<LittleEndian>()?;
+    let portfolio = reader.read_f64::<LittleEndian>()?; 
+    let equity = reader.read_f64::<LittleEndian>()?;
+    let unrealized = reader.read_f64::<LittleEndian>()?;
+    let real = reader.read_f64::<LittleEndian>()?; 
+
+    let status = reader.read_i32::<LittleEndian>()?;
+    let last_upd = reader.read_i64::<LittleEndian>()?;
+
+
+    Ok(AccountBinaryPayload {
+        account_id: account_id,
+        currency: currency, 
+        buying_power: buying_power, 
+        cash: cash, 
+        portfolio_value: portfolio, 
+        equity: equity, 
+        unrealized_pl: unrealized, 
+        realized_pl: real, 
+        status: status, 
+        last_update: last_upd
+    })
 }
 
 fn deserialize_order(packet: &[u8]) -> Result<PositionBinaryPayload> {
@@ -172,20 +196,36 @@ fn deserialize_position(packet: &[u8]) -> Result<AccountBinaryPayload> {
     bail!("")
 }
 
+struct AssetBinaryPayload {
+    id: [u8; 64], 
+    asset_class: [u8; 16],
+    exchange: [u8; 16],
+    symbol: [u8; 16],
+    name: [u8; 32],
+    status: u32, 
+    tradeable: u8,
+    marginable: u8,
+    shortable: u8, 
+    easy_to_borrow: u8, 
+    fractionable: u8
+}
 
 pub fn deserialize_asset(packet: &[u8]) -> Result<AssetBinaryPayload> {
-    let mut reader = Cursor::new(packet)?; 
-    let id = read_bin_arr<64>(&mut reader)?;
+    let mut reader = Cursor::new(packet); 
+    let id = [0u8; 64]
+
+    //let mut account_id = [0u8; 64];
+    //reader.read_exact(&mut account_id)?;
     let asset_class = read_bin_arr<16>(&mut reader)?;
     let exchange = read_bin_arr<16>(&mut reader)?; 
     let symbol = read_bin_arr<16>(&mut reader)?; 
     let name = read_bin_arr<32>(&mut reader)?; 
-    let status = reader.read_u32::<BigEndian>()?;
-    let tradeable = reader.read_u8::<BigEndian>()?;
-    let marginable = reader.read_u8::<BigEndian>()?;
-    let shortable = reader.read_u8::<BigEndian>()?;
-    let easy_to_borrow = reader.read_u8::<BigEndian>()?;
-    let fractionable = reader.read_u8::<BigEndian>()?;
+    let status = reader.read_u32::<LittleEndian>()?;
+    let tradeable = reader.read_u8::<LittleEndian>()?;
+    let marginable = reader.read_u8::<LittleEndian>()?;
+    let shortable = reader.read_u8::<LittleEndian>()?;
+    let easy_to_borrow = reader.read_u8::<LittleEndian>()?;
+    let fractionable = reader.read_u8::<LittleEndian>()?;
 
     Ok(AssetBinaryPayload{
         id: id, 
