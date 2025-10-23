@@ -1,7 +1,7 @@
 use crate::models::account::Account;
 use crate::repositories::prelude_repo::*;
 
-struct AccountRepository {
+pub struct AccountRepository {
     pool: PgPool
 }
 
@@ -14,7 +14,16 @@ impl AccountRepository {
         let result = sqlx::query("INSERT INTO account WHERE 
             (account_id, currency, buying_power, cash, portfolio_value, equity,
              unrealized_pl, realized_pl, status, last_update) VALUES 
-            ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10);") 
+            ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) ON CONFLICT (account_id) DO UPDATE SET
+            currency = EXCLUDED.currency,
+            buying_power = EXCLUDED.buying_power, 
+            cash = EXCLUDED.cash,
+            portfolio_value = EXCLUDED.portfolio_value,
+            equity = EXCLUDED.equity,
+            unrealized_pl = EXCLUDED.unrealized_pl, 
+            realized_pl = EXCLUDED.realized_pl, 
+            status = EXCLUDED.status, 
+            last_update = EXCLUDED.last_update;") 
             .bind(&account.account_id)
             .bind(&account.currency)
             .bind(account.buying_power)
@@ -24,7 +33,7 @@ impl AccountRepository {
             .bind(account.unrealized_pl)
             .bind(account.realized_pl)
             .bind(&account.status)
-            .bind(account.last_updated)
+            .bind(account.last_update)
             .execute(&self.pool)
             .await?;
 

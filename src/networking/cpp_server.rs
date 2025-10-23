@@ -7,7 +7,7 @@ use std::{
     net::{TcpListener, TcpStream},
     mem::{size_of}
 }; 
-use crate::{networking::protocols::cpp_protocols, protocols::AccountBinaryPayload};
+use crate::{networking::protocols::cpp_protocols};
 
 
 
@@ -42,7 +42,7 @@ fn handle_stream(mut stream: TcpStream) -> Result <()> {
     let mut buffer = vec![0u8; data_size]; // Filed out buffer with 0 for body
     stream.read_exact(&mut buffer)?;
     
-    let d: AccountBinaryPayload = cpp_protocols::deserialize_account(&buffer)?;
+    cpp_protocols::deserialize_account(&buffer)?;
 
     // Now, read number of data from stream
     //let body = cpp_protocols::deserialize_data_cpp(&header, &buffer)?;
