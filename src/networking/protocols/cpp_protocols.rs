@@ -191,9 +191,78 @@ fn deserialize_order(packet: &[u8]) -> Result<PositionBinaryPayload> {
     bail!("")
 }
 
-fn deserialize_position(packet: &[u8]) -> Result<AccountBinaryPayload> {
+struct PositionBinaryPayload {
+    pub asset_id: [u8; 64],
+    pub symbol: [u8; 16],
+    pub exchange: [u8; 16], 
+    pub asset_class: [u8; 16],
 
-    bail!("")
+    pub qty: u32,
+    pub avg_entry_price: f64, 
+    
+    pub side: [u8; 8], 
+    pub market_value: f64,
+    pub cost_basis: f64, 
+    
+    pub unrealized_pl: f64,
+    pub unrealized_plpc: f64,
+    pub unrealized_intraday_pl: f64,
+    pub unrealized_intraday_plpc: f64,
+    pub current_price: f64,
+    pub lastday_price: f64,
+    pub change_today: f64,
+}
+fn deserialize_position(packet: &[u8]) -> Result<PositionBinaryPayload> {
+    let mut reader = Cursor::new(packet); 
+    let mut asset_id = [0u8; 64];
+    reader.read_exact(&mut asset_id)?;
+
+    let mut symbol = [0u8; 16]; 
+    reader.read_exact(&mut symbol)?;
+
+    let mut exchange = [0u8; 16];
+    reader.read_exact(&mut exchange)?; 
+
+    let mut asset_class = [0u8; 16]; 
+    reader.read_exact(&mut asset_class)?; 
+
+    let qty = reader.read_u32::<LittleEndian>()?;
+    let avg_entry_price = reader.read_f64::<LittleEndian>()?;
+
+    let mut side = [0u8; 8]; 
+    reader.read_exact(&mut side)?; 
+
+    let market_value = reader.read_f64::<LittleEndian>()?;
+    let cost_basis = reader.read_f64::<LittleEndian>()?;
+
+    let unrealized_pl = reader.read_f64::<LittleEndian>()?;
+    let unrealized_plpc = reader.read_f64::<LittleEndian>()?;
+
+    let unrealized_intraday_pl = reader.read_f64::<LittleEndian>()?;
+    let unrealized_intraday_plpc = reader.read_f64::<LittleEndian>()?;
+    let current_price = reader.read_f64::<LittleEndian>()?;
+    let lastday_price = reader.read_f64::<LittleEndian>()?;
+    let change_today = reader.read_f64::<LittleEndian>()?;
+
+    Ok(PositionBinaryPayload{
+        asset_id: asset_id, 
+        symbol: symbol, 
+        exchange: exchange, 
+        asset_class: asset_class, 
+        qty: qty, 
+        avg_entry_price: avg_entry_price,
+        side: side, 
+        market_value: market_value, 
+        cost_basis: cost_basis, 
+        unrealized_pl: unrealized_pl, 
+        unrealized_plpc: unrealized_plpc, 
+        unrealized_intraday_pl: unrealized_intraday_pl,
+        unrealized_intraday_plpc: unrealized_intraday_plpc,
+        current_price: current_price, 
+        lastday_price: lastday_price, 
+        change_today: change_today
+    })
+
 }
 
 
