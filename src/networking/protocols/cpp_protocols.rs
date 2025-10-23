@@ -42,59 +42,59 @@ enum BinaryStatus {
 
 #[repr(C, packed)]
 struct OrderBinaryPayload {
-    id: [u8; 64],
-    client_order_id: [u8; 64],
-    created_at: u64, 
-    updated_at: u64,
-    submitted_at: u64,
-    filled_at: u64,
+    pub id: [u8; 64],
+    pub client_order_id: [u8; 64],
+    pub created_at: u64, 
+    pub updated_at: u64,
+    pub submitted_at: u64,
+    pub filled_at: u64,
     
-    symbol: [u8; 16],
-    side: [u8; 8],
-    type_order: [u8; 16],
-    time_in_force: u64, 
+    pub symbol: [u8; 16],
+    pub side: [u8; 8],
+    pub type_order: [u8; 16],
+    pub time_in_force: u64, 
 
-    filled_qty: u32,
-    filled_avg_price: f32 
+    pub filled_qty: u32,
+    pub filled_avg_price: f32 
 }
 
 #[repr(C, packed)]
 struct AssetBinaryPayload {
-    id: [u8; 64], 
-    asset_class: [u8; 16],
-    exchange: [u8; 16],
-    symbol: [u8; 16],
-    name: [u8; 32],
-    status: u32, 
-    tradeable: u8,
-    marginable: u8,
-    shortable: u8, 
-    easy_to_borrow: u8, 
-    fractionable: u8
+    pub id: [u8; 64], 
+    pub asset_class: [u8; 16],
+    pub exchange: [u8; 16],
+    pub symbol: [u8; 16],
+    pub name: [u8; 32],
+    pub status: u32, 
+    pub tradeable: u8,
+    pub marginable: u8,
+    pub shortable: u8, 
+    pub easy_to_borrow: u8, 
+    pub fractionable: u8
 }
 
 #[repr(C, packed)]
 struct PositionBinaryPayload {
-    asset_id: [u8; 64],
-    symbol: [u8; 16],
-    exchange: [u8; 16], 
-    asset_class: [u8; 16],
+    pub asset_id: [u8; 64],
+    pub symbol: [u8; 16],
+    pub exchange: [u8; 16], 
+    pub asset_class: [u8; 16],
 
-    qty: u32,
-    avg_entry_price: f64, 
+    pub qty: u32,
+    pub avg_entry_price: f64, 
     
-    side: [u8; 8], 
-    market_value: f64,
-    cost_basis: f64, 
+    pub side: [u8; 8], 
+    pub market_value: f64,
+    pub cost_basis: f64, 
 
     
-    unrealized_pl: f64,
-    unrealized_plpc: f64,
-    unrealized_intraday_pl: f64,
-    unrealized_intraday_plpc: f64,
-    current_price: f64,
-    lastday_price: f64,
-    change_today: f64,
+    pub unrealized_pl: f64,
+    pub unrealized_plpc: f64,
+    pub unrealized_intraday_pl: f64,
+    pub unrealized_intraday_plpc: f64,
+    pub current_price: f64,
+    pub lastday_price: f64,
+    pub change_today: f64,
 }
 
 #[repr(C, packed)]
@@ -196,36 +196,30 @@ fn deserialize_position(packet: &[u8]) -> Result<AccountBinaryPayload> {
     bail!("")
 }
 
-struct AssetBinaryPayload {
-    id: [u8; 64], 
-    asset_class: [u8; 16],
-    exchange: [u8; 16],
-    symbol: [u8; 16],
-    name: [u8; 32],
-    status: u32, 
-    tradeable: u8,
-    marginable: u8,
-    shortable: u8, 
-    easy_to_borrow: u8, 
-    fractionable: u8
-}
 
 pub fn deserialize_asset(packet: &[u8]) -> Result<AssetBinaryPayload> {
     let mut reader = Cursor::new(packet); 
-    let id = [0u8; 64]
+    let mut id = [0u8; 64];
+    reader.read_exact(&mut id)?;
 
-    //let mut account_id = [0u8; 64];
-    //reader.read_exact(&mut account_id)?;
-    let asset_class = read_bin_arr<16>(&mut reader)?;
-    let exchange = read_bin_arr<16>(&mut reader)?; 
-    let symbol = read_bin_arr<16>(&mut reader)?; 
-    let name = read_bin_arr<32>(&mut reader)?; 
+    let mut asset_class = [0u8; 16]; 
+    reader.read_exact(&mut asset_class)?; 
+
+    let mut exchange = [0u8; 16];
+    reader.read_exact(&mut exchange)?; 
+
+    let mut symbol = [0u8; 16]; 
+    reader.read_exact(&mut symbol)?;
+
+    let mut name = [0u8; 32];
+    reader.read_exact(&mut name)?;
+
     let status = reader.read_u32::<LittleEndian>()?;
-    let tradeable = reader.read_u8::<LittleEndian>()?;
-    let marginable = reader.read_u8::<LittleEndian>()?;
-    let shortable = reader.read_u8::<LittleEndian>()?;
-    let easy_to_borrow = reader.read_u8::<LittleEndian>()?;
-    let fractionable = reader.read_u8::<LittleEndian>()?;
+    let tradeable = reader.read_u8()?;
+    let marginable = reader.read_u8()?;
+    let shortable = reader.read_u8()?;
+    let easy_to_borrow = reader.read_u8()?;
+    let fractionable = reader.read_u8()?;
 
     Ok(AssetBinaryPayload{
         id: id, 
