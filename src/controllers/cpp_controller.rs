@@ -1,5 +1,5 @@
-use crate::protocols::BinaryMessage;
+use crate::protocols::CppBinaryMessage;
 
-pub trait CppController<T> {
-    fn handle_operation(&self, bn: BinaryMessage, model: T);
+pub trait CppController<T, R> {
+    async fn handle_operation(&self, bn: CppBinaryMessage, model: T) -> Result<R, sqlx::Error>;
 }

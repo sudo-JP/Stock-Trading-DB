@@ -10,8 +10,21 @@ impl AccountRepository {
         Self { pool }
     }
 
-    pub async fn create(&self, account: &Account) -> Result<bool, sqlx::Error> {
-        let result = sqlx::query("INSERT INTO account WHERE 
+    /*
+     * This should fetch one, since we only update and insert 
+     * */
+    pub async fn query_by_id(&self, id: &str) -> Result<Account, sqlx::Error> {
+        let result = sqlx::query_as("
+            SELECT * FROM accounts WHERE account_id = $1
+            ")
+            .bind(id)
+            .fetch_one(&self.pool)
+            .await?;
+        Ok(result)
+    }
+
+    pub async fn upsert(&self, account: &Account) -> Result<bool, sqlx::Error> {
+        sqlx::query("INSERT INTO account
             (account_id, currency, buying_power, cash, portfolio_value, equity,
              unrealized_pl, realized_pl, status, last_update) VALUES 
             ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) ON CONFLICT (account_id) DO UPDATE SET
@@ -37,10 +50,10 @@ impl AccountRepository {
             .execute(&self.pool)
             .await?;
 
-        Ok(result.rows_affected() > 0)
+        Ok(true)
     }
 
-    pub async fn delete_account_by_id(&self, account_id: &str) -> Result<bool, sqlx::Error> {
+    pub async fn delete_by_id(&self, account_id: &str) -> Result<bool, sqlx::Error> {
         let result = sqlx::query("DELETE FROM account WHERE account_id = $1;")
             .bind(account_id)
             .execute(&self.pool)

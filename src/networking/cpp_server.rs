@@ -29,7 +29,7 @@ pub struct CppTCPServer {
 fn handle_stream(mut stream: TcpStream) -> Result <()> {
     // First read the header
 
-    let header: usize = size_of::<cpp_protocols::BinaryMessage>(); 
+    let header: usize = size_of::<cpp_protocols::CppBinaryMessage>(); 
     let mut buffer = vec![0u8; header]; // Filed out buffer with 0 for header 
 
     // Second, deserialize the header to find the remaining size 

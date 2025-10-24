@@ -25,7 +25,7 @@ pub enum SQLTable {
 }
 
 #[repr(C, packed)]
-pub struct BinaryMessage {
+pub struct CppBinaryMessage {
     pub sql_command: SQLCommand,
     pub table: SQLTable, 
     pub timestamp: u64,
@@ -105,9 +105,9 @@ struct PositionBinaryPayload {
 
 
 // Deserialize 
-pub fn deserialize_header_cpp(header: &[u8]) -> Result<BinaryMessage> {
+pub fn deserialize_header_cpp(header: &[u8]) -> Result<CppBinaryMessage> {
     // Binary length checking 
-    if header.len() != size_of::<BinaryMessage>() {
+    if header.len() != size_of::<CppBinaryMessage>() {
         bail!("Failed to deserialize header, header size mismatch");
     }
 
@@ -117,7 +117,7 @@ pub fn deserialize_header_cpp(header: &[u8]) -> Result<BinaryMessage> {
     let timestamp = reader.read_u64::<LittleEndian>()?;
     let data_size = reader.read_u32::<LittleEndian>()?; 
 
-    Ok(BinaryMessage {
+    Ok(CppBinaryMessage {
         sql_command: match sql {
             1 => SQLCommand::INSERT, 
             2 => SQLCommand::SELECT,
