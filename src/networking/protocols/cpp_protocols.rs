@@ -1,31 +1,37 @@
 use std::io::{Cursor, Read};
+pub use chrono::prelude::{DateTime, Utc};
+use chrono::TimeZone; 
+use crate::models::{Account, Position, Trade, Instrument};
 
 use anyhow::{Result, bail};
 use byteorder::{LittleEndian, ReadBytesExt};
 
+#[repr(u32)]
+pub enum SQLCommand {
+    INSERT, 
+    SELECT, 
+    UPDATE, 
+    DELETE, 
+    UNKNOWN
+}
+
+#[repr(u32)]
+pub enum SQLTable {
+    ACCOUNT, 
+    ORDER, 
+    POSITION, 
+    ASSET,
+    UNKNOWN,
+}
+
 #[repr(C, packed)]
-pub struct BinaryMessage {
-    pub sql_command: u32,
-    pub table: u32, 
+pub struct CppBinaryMessage {
+    pub sql_command: SQLCommand,
+    pub table: SQLTable, 
     pub timestamp: u64,
     pub data_size: u32
 } 
 
-#[repr(u32)]
-enum SQLCommand {
-    INSERT = 1, 
-    SELECT = 2, 
-    UPDATE = 3, 
-    DELETE = 4
-}
-
-#[repr(u32)]
-enum SQLTable {
-    ACCOUNT = 1, 
-    ORDER = 2, 
-    POSITION = 3, 
-    ASSET = 4
-}
 
 #[repr(u32)]
 enum BinaryStatus {
@@ -97,30 +103,11 @@ struct PositionBinaryPayload {
     pub change_today: f64,
 }
 
-#[repr(C, packed)]
-pub struct AccountBinaryPayload {
-    pub account_id: [u8; 64],
-    pub currency: [u8; 4], 
-    
-    pub buying_power: f64,
-    pub cash: f64,
-    pub portfolio_value: f64, 
-    pub equity: f64,
-
-    // Performance
-    pub unrealized_pl: f64,
-    pub realized_pl: f64,
-
-    pub status: i32, 
-    pub last_update: i64
-}
-
-
 
 // Deserialize 
-pub fn deserialize_header_cpp(header: &[u8]) -> Result<BinaryMessage> {
+pub fn deserialize_header_cpp(header: &[u8]) -> Result<CppBinaryMessage> {
     // Binary length checking 
-    if header.len() != size_of::<BinaryMessage>() {
+    if header.len() != size_of::<CppBinaryMessage>() {
         bail!("Failed to deserialize header, header size mismatch");
     }
 
@@ -130,34 +117,43 @@ pub fn deserialize_header_cpp(header: &[u8]) -> Result<BinaryMessage> {
     let timestamp = reader.read_u64::<LittleEndian>()?;
     let data_size = reader.read_u32::<LittleEndian>()?; 
 
-    Ok(BinaryMessage {
-        sql_command: sql, 
-        table: table, 
+    Ok(CppBinaryMessage {
+        sql_command: match sql {
+            1 => SQLCommand::INSERT, 
+            2 => SQLCommand::SELECT,
+            3 => SQLCommand::UPDATE, 
+            4 => SQLCommand::DELETE, 
+            _ => SQLCommand::UNKNOWN
+        }, 
+        table: match table {
+            1 => SQLTable::ACCOUNT, 
+            2 => SQLTable::ORDER, 
+            3 => SQLTable::POSITION, 
+            4 => SQLTable::POSITION,
+            _ => SQLTable::UNKNOWN 
+        }, 
         timestamp: timestamp, 
         data_size: data_size} )
 }
 
-impl SQLTable {
-    pub fn from_u32(num: u32) -> Option<SQLTable> {
-        match num {
-            1 => Some(SQLTable::ACCOUNT), 
-            2 => Some(SQLTable::ORDER), 
-            3 => Some(SQLTable::POSITION), 
-            4 => Some(SQLTable::ASSET),
-            _ => None
-        }
 
-    }
+fn bytes_to_string(bytes: &[u8]) -> String {
+    String::from_utf8_lossy(bytes).trim_end_matches('\0').to_string()
+}
+
+fn i64_to_nano(timestamp: i64) -> DateTime<Utc> {
+    Utc.timestamp_nanos(timestamp)
 }
 
 
-pub fn deserialize_account(packet: &[u8]) -> Result<AccountBinaryPayload> {
+pub fn deserialize_account(packet: &[u8]) -> Result<Account> {
     let mut reader = Cursor::new(packet); 
     let mut account_id = [0u8; 64];
     reader.read_exact(&mut account_id)?;
 
     let mut currency = [0u8; 4]; 
     reader.read_exact(&mut currency)?;
+
     let buying_power = reader.read_f64::<LittleEndian>()?;  
 
     let cash = reader.read_f64::<LittleEndian>()?;
@@ -170,17 +166,21 @@ pub fn deserialize_account(packet: &[u8]) -> Result<AccountBinaryPayload> {
     let last_upd = reader.read_i64::<LittleEndian>()?;
 
 
-    Ok(AccountBinaryPayload {
-        account_id: account_id,
-        currency: currency, 
+    Ok(Account{
+        account_id: bytes_to_string(&account_id),
+        currency: bytes_to_string(&currency),
         buying_power: buying_power, 
         cash: cash, 
         portfolio_value: portfolio, 
         equity: equity, 
         unrealized_pl: unrealized, 
         realized_pl: real, 
-        status: status, 
-        last_update: last_upd
+        status: match status {
+            1 => "ACTIVE".to_owned(),
+            2 => "INACTIVE".to_owned(), 
+            _ => "UNKNOWN".to_owned()
+        }, 
+        last_update: i64_to_nano(last_upd)
     })
 }
 
