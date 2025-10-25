@@ -1,6 +1,6 @@
 use crate::models::Account;
 use anyhow::{Result, anyhow};
-use crate::repositories::account_repo::AccountRepository;
+use crate::repositories::AccountRepository;
 use crate::controllers::CppController;
 use crate::protocols::{CppBinaryMessage, SQLCommand};
 
