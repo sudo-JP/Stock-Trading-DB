@@ -5,22 +5,6 @@ struct OrderRepository {
     pool: PgPool
 }
 
-pub struct Order {
-    pub id: String, 
-    pub client_order_id: String,
-    pub created_at: DateTime<Utc>, 
-    pub updated_at: DateTime<Utc>,
-    pub submitted_at: DateTime<Utc>,
-    pub filled_at: DateTime<Utc>,
-    
-    pub symbol: String,
-    pub side: String, 
-    pub type_order: String, 
-    pub time_in_force: DateTime<Utc>, 
-
-    pub filled_qty: i32, 
-    pub filled_avg_price: f32 
-}
 impl OrderRepository {
     pub fn new(pool: PgPool) -> Self {
         Self { pool }
@@ -28,11 +12,11 @@ impl OrderRepository {
 
     pub async fn insert(&self, order: &Order) -> Result<bool, sqlx::Error> {
         let result = sqlx::query("
-            INSERT INTO orders (id, client_order_id, created_at, updated_at, submitted_at, 
+            INSERT INTO orders (order_id, client_order_id, created_at, updated_at, submitted_at, 
             filled_at, symbol, side, type_order, time_in_force, filled_qty, filled_avg_price) 
             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12);
             ")
-            .bind(&order.id)
+            .bind(&order.order_id)
             .bind(&order.client_order_id)
             .bind(&order.created_at)
             .bind(&order.updated_at)
@@ -50,7 +34,7 @@ impl OrderRepository {
         Ok(result.rows_affected() > 0)
     }
 
-    pub async fn update_by_id(&self, order: Order) -> Result<bool, sqlx::Error> {
+    pub async fn update(&self, order: Order) -> Result<bool, sqlx::Error> {
         let result = sqlx::query("UPDATE orders SET
             client_order_id = $1,
             updated_at = $2,
@@ -62,7 +46,7 @@ impl OrderRepository {
             time_in_force = $8,
             filled_qty = $9,
             filled_avg_price = $10
-            WHERE id = $11;
+            WHERE order_id = $11;
             ")
             .bind(&order.client_order_id)
             .bind(order.updated_at)
@@ -74,7 +58,7 @@ impl OrderRepository {
             .bind(order.time_in_force)
             .bind(order.filled_qty)
             .bind(order.filled_avg_price)
-            .bind(&order.id)
+            .bind(&order.order_id)
             .execute(&self.pool)
             .await?;
         Ok(result.rows_affected() > 0)
@@ -88,4 +72,14 @@ impl OrderRepository {
 
         Ok(result.rows_affected() > 0) 
     }
+
+    pub async fn get_order_by_id(&self, id: &str) -> Result<Order, sqlx::Error> {
+        let result = sqlx::query_as::<sqlx::Postgres, Order>("
+            SELECT * FROM orders WHERE order_id = $1
+            ")
+            .bind(id)
+            .fetch_one(&self.pool)
+            .await?;
+        Ok(result)
+    } 
 }

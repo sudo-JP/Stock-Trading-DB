@@ -14,7 +14,7 @@ impl AccountRepository {
      * This should fetch one, since we only update and insert 
      * */
     pub async fn query_by_id(&self, id: &str) -> Result<Account, sqlx::Error> {
-        let result = sqlx::query_as("
+        let result = sqlx::query_as::<sqlx::Postgres, Account>("
             SELECT * FROM accounts WHERE account_id = $1
             ")
             .bind(id)

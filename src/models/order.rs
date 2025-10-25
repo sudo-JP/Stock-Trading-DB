@@ -1,7 +1,8 @@
 use crate::models::prelude_model::*; 
 
+#[derive(Debug, sqlx::FromRow)]
 pub struct Order {
-    pub id: String, 
+    pub order_id: String, 
     pub client_order_id: String,
     pub created_at: DateTime<Utc>, 
     pub updated_at: DateTime<Utc>,

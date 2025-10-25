@@ -141,7 +141,7 @@ fn deserialize_order(packet: &[u8]) -> Result<Order> {
     let filled_avg_price = reader.read_f32::<LittleEndian>()?;
 
     Ok(Order{
-        id: bytes_to_string(&id), 
+        order_id: bytes_to_string(&id), 
         client_order_id: bytes_to_string(&client_order_id), 
         created_at: i64_to_nano(created_at), 
         updated_at: i64_to_nano(updated_at), 
