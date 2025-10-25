@@ -1,14 +1,9 @@
 use crate::models::Instrument;
 use anyhow::Result;
 use crate::repositories::InstrumentRepository;
-use crate::controllers::CppController;
+use crate::controllers::*;
 use crate::protocols::{CppBinaryMessage, SQLCommand};
 
-pub enum InstrumentResult<T> {
-    SUCCESS, 
-    FAILURE, 
-    VALUE(T), 
-}
 
 fn validate_instrument(instr: &Instrument) -> Result<(), sqlx::Error> {
     if instr.symbol.is_empty() {
@@ -29,8 +24,8 @@ struct InstrumentController {
     repo: InstrumentRepository 
 }
 
-impl CppController<Instrument, InstrumentResult<Instrument>> for InstrumentController {
-    async fn handle_operation(&self, bn: CppBinaryMessage, model: Instrument) -> std::result::Result<InstrumentResult<Instrument>, sqlx::Error> {
+impl CppController<Instrument, CppResult<Instrument>> for InstrumentController {
+    async fn handle_operation(&self, bn: CppBinaryMessage, model: Instrument) -> std::result::Result<CppResult<Instrument>, sqlx::Error> {
         validate_instrument(&model)?;
 
         match bn.sql_command {
@@ -41,14 +36,14 @@ impl CppController<Instrument, InstrumentResult<Instrument>> for InstrumentContr
                 self.repo.delete_by_symbol(&model.symbol).await?;
             }
             SQLCommand::SELECT => {
-                return Ok(InstrumentResult::VALUE(self.repo.find_by_symbol(&model.symbol).await?))
+                return Ok(CppResult::VALUE(self.repo.find_by_symbol(&model.symbol).await?))
             }
             _ => {
                 return Err(sqlx::Error::Protocol("Unknown SQL command".into()));
             }
         }
 
-        Ok(InstrumentResult::SUCCESS)
+        Ok(CppResult::SUCCESS)
     }
 
 }
