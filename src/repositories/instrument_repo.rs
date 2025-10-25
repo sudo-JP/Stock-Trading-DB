@@ -22,9 +22,16 @@ impl InstrumentRepository {
         Ok(instrument)   
     }
 
-    pub async fn create(&self, instrument: &Instrument) -> Result<bool, sqlx::Error> {
+    pub async fn upsert(&self, instrument: &Instrument) -> Result<bool, sqlx::Error> {
         let result = sqlx::query(
-            r#"INSERT INTO instruments (symbol, name, instr_type, currency, exchange, multiplier, min_tick) VALUES ($1, $2, $3, $4, $5, $6, $7);"#
+            r#"INSERT INTO instruments (symbol, name, instr_type, currency, exchange, multiplier, min_tick) VALUES ($1, $2, $3, $4, $5, $6, $7) ON CONFLICT (symbol) DO UPDATE SET
+            symbol = EXCLUDED.symbol,
+            name = EXCLUDED.name, 
+            instr_type = EXCLUDED.instr_type,
+            currency = EXCLUDED.currency,
+            exchange = EXCLUDED.exchange, 
+            multiplier = EXCLUDED.multiplier
+            min_tick = EXCLUDED.min_tick;"#
             )
             .bind(&instrument.symbol)
             .bind(&instrument.name)

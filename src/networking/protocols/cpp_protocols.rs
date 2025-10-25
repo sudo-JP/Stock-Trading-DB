@@ -64,20 +64,6 @@ struct OrderBinaryPayload {
     pub filled_avg_price: f32 
 }
 
-#[repr(C, packed)]
-struct AssetBinaryPayload {
-    pub id: [u8; 64], 
-    pub asset_class: [u8; 16],
-    pub exchange: [u8; 16],
-    pub symbol: [u8; 16],
-    pub name: [u8; 32],
-    pub status: u32, 
-    pub tradeable: u8,
-    pub marginable: u8,
-    pub shortable: u8, 
-    pub easy_to_borrow: u8, 
-    pub fractionable: u8
-}
 
 #[repr(C, packed)]
 struct PositionBinaryPayload {
@@ -281,7 +267,7 @@ fn deserialize_position(packet: &[u8]) -> Result<PositionBinaryPayload> {
 }
 
 
-pub fn deserialize_asset(packet: &[u8]) -> Result<AssetBinaryPayload> {
+pub fn deserialize_asset(packet: &[u8]) -> Result<Instrument> {
     let mut reader = Cursor::new(packet); 
     let mut id = [0u8; 64];
     reader.read_exact(&mut id)?;
@@ -299,24 +285,38 @@ pub fn deserialize_asset(packet: &[u8]) -> Result<AssetBinaryPayload> {
     reader.read_exact(&mut name)?;
 
     let status = reader.read_u32::<LittleEndian>()?;
-    let tradeable = reader.read_u8()?;
-    let marginable = reader.read_u8()?;
-    let shortable = reader.read_u8()?;
-    let easy_to_borrow = reader.read_u8()?;
-    let fractionable = reader.read_u8()?;
+    let tradeable = reader.read_u8()? != 0;
+    let marginable = reader.read_u8()? != 0;
+    let shortable = reader.read_u8()? != 0;
+    let easy_to_borrow = reader.read_u8()? != 0;
+    let fractionable = reader.read_u8()? != 0;
 
-    Ok(AssetBinaryPayload{
-        id: id, 
-        asset_class: asset_class, 
-        exchange: exchange, 
-        symbol: symbol, 
-        name: name, 
-        status: status, 
+    Ok(Instrument{
+        instrument_id: bytes_to_string(&id), 
+        instrument_class: bytes_to_string(&asset_class), 
+        exchange: bytes_to_string(&exchange), 
+        symbol: bytes_to_string(&symbol), 
+        name: bytes_to_string(&name),
+        status: match status {
+            1 => "ACTIVE".to_owned(), 
+            2 => "INACTIVE".to_owned(), 
+            3 => "PENDING".to_owned(), 
+            4 => "SUSPENDED".to_owned(), 
+            5 => "CLOSED".to_owned(), 
+            6 => "DELISTED".to_owned(), 
+            7 => "MAINTENANCE".to_owned(),
+            _ => "UNKNOWN".to_owned(),
+        }, 
         tradeable: tradeable, 
         marginable: marginable, 
         shortable: shortable, 
         easy_to_borrow: easy_to_borrow, 
         fractionable: fractionable, 
+        currency: "USD".to_owned(),
+        instr_type: bytes_to_string(&asset_class), 
+        multiplier: 1.0, 
+        min_tick: None, 
+
     })
     
 }
