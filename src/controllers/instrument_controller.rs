@@ -1,5 +1,5 @@
 use crate::models::Instrument;
-use anyhow::{Result, anyhow};
+use anyhow::Result;
 use crate::repositories::InstrumentRepository;
 use crate::controllers::CppController;
 use crate::protocols::{CppBinaryMessage, SQLCommand};
@@ -35,16 +35,14 @@ impl CppController<Instrument, InstrumentResult<Instrument>> for InstrumentContr
 
         match bn.sql_command {
             SQLCommand::INSERT | SQLCommand::UPDATE => {
-
+                self.repo.upsert(&model).await?; 
             }
             SQLCommand::DELETE => {
-
+                self.repo.delete_by_symbol(&model.symbol).await?;
             }
-
             SQLCommand::SELECT => {
-
+                return Ok(InstrumentResult::VALUE(self.repo.find_by_symbol(&model.symbol).await?))
             }
-
             _ => {
                 return Err(sqlx::Error::Protocol("Unknown SQL command".into()));
             }
