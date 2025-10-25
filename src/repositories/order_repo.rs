@@ -49,4 +49,34 @@ impl OrderRepository {
             .await?;
         Ok(result.rows_affected() > 0)
     }
+
+    pub async fn update_by_id(&self, order: Order) -> Result<bool, sqlx::Error> {
+        let result = sqlx::query("UPDATE orders SET
+            client_order_id = $1,
+            updated_at = $2,
+            submitted_at = $3,
+            filled_at = $4,
+            symbol = $5,
+            side = $6,
+            type_order = $7,
+            time_in_force = $8,
+            filled_qty = $9,
+            filled_avg_price = $10
+            WHERE id = $11;
+            ")
+            .bind(&order.client_order_id)
+            .bind(order.updated_at)
+            .bind(order.submitted_at)
+            .bind(order.filled_at)
+            .bind(&order.symbol)
+            .bind(&order.side)
+            .bind(&order.type_order)
+            .bind(order.time_in_force)
+            .bind(order.filled_qty)
+            .bind(order.filled_avg_price)
+            .bind(&order.id)
+            .execute(&self.pool)
+            .await?;
+        Ok(result.rows_affected() > 0)
+    }
 }
