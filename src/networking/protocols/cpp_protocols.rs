@@ -228,9 +228,10 @@ fn deserialize_position(packet: &[u8]) -> Result<Position> {
         symbol: bytes_to_string(&symbol), 
         exchange: bytes_to_string(&exchange), 
         instr_class: bytes_to_string(&asset_class), 
-        qty: qty, 
+        qty: qty as i32, 
         avg_entry_price: avg_entry_price,
         side: bytes_to_string(&side), 
+        cost_basis: cost_basis,
         average_cost: avg_entry_price, // About the same, will change it 
         market_value: market_value, 
         unrealized_pl: unrealized_pl, 

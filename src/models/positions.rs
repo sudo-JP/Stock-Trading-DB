@@ -5,7 +5,8 @@ pub struct Position {
     pub exchange: String, 
     pub instr_class: String, 
 
-    pub qty: u32, 
+    pub qty: i32, 
+    pub cost_basis: f64,
     pub avg_entry_price: f64, 
 
     pub side: String, 

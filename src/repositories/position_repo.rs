@@ -11,6 +11,37 @@ impl PositionRepository {
         Self { pool }
     }
 
+    pub async fn upsert(&self, pos: &Position) -> Result<bool, sqlx::Error> {
+        sqlx::query(
+            "INSERT INTO positions (instrument_id, symbol, exchange, instr_class,
+            qty, cost_basis, avg_entry_price, side, market_value, average_cost,
+            unrealized_pl, unrealized_plpc, unrealized_intraday_pl, unrealized_intraday_plpc, 
+            current_price, lastday_price, change_today) VALUES ($1, $2, $3, $4, $5, $6, $7, 
+            $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)"
+            )
+            .bind(&pos.instrument_id)
+            .bind(&pos.symbol)
+            .bind(&pos.exchange)
+            .bind(&pos.instr_class)
+            .bind(pos.qty)
+            .bind(pos.cost_basis)
+            .bind(pos.avg_entry_price)
+            .bind(&pos.side)
+            .bind(pos.market_value)
+            .bind(pos.average_cost)
+            .bind(pos.unrealized_pl)
+            .bind(pos.unrealized_plpc)
+            .bind(pos.unrealized_intraday_pl)
+            .bind(pos.unrealized_intraday_plpc)
+            .bind(pos.current_price)
+            .bind(pos.lastday_price)
+            .bind(pos.change_today)
+            .execute(&self.pool)
+            .await?;
+
+        Ok(true)
+    }
+
     pub async fn get_position_by_instrument(&self, instrument_id: i32) -> Result<Position, sqlx::Error> {
         let position = sqlx::query_as::<sqlx::Postgres, Position>(
             "SELECT * FROM positions WHERE instrument_id = $1;" 
@@ -32,39 +63,6 @@ impl PositionRepository {
             .await?;
 
         Ok(result.rows_affected() > 0)
-    }
-
-    pub async fn update_position(&self, update: PositionUpdate) -> Result<Position, Error> {
-        let position = sqlx::query_as::<sqlx::Postgres, Position>(
-            "SELECT * FROM positions WHERE instrument_id = $1;")
-            .bind(update.instrument_id)
-            .fetch_one(&self.pool)
-            .await?;
-        
-
-        let avg_cost = ((position.quantity * position.average_cost) + (update.quantity_change * update.trade_price) + update.commission) / (position.quantity + update.quantity_change);
-
-        let updated: Position = Position {
-            position_id: position.position_id,
-            instrument_id: position.instrument_id, 
-            quantity: position.quantity + update.quantity_change, 
-
-            average_cost: avg_cost,
-
-            unrealized_pnl: 0.0 // Change later when we have socket to calculate: Market Value - Total Cost 
-        };
-        // Use cached price for PnL calculation
-
-        sqlx::query(
-            "UPDATE positions SET quantity = $1, average_cost = $2, unrealized_pnl = $3 WHERE instrument_id = $4;")
-            .bind(updated.quantity)
-            .bind(updated.average_cost)
-            .bind(updated.unrealized_pnl)
-            .bind(updated.instrument_id)
-            .execute(&self.pool)
-            .await?;
-    
-        Ok(updated)
     }
 
 }
