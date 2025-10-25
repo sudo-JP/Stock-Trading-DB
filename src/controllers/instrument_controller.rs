@@ -25,7 +25,7 @@ struct InstrumentController {
 }
 
 impl CppController<Instrument, CppResult<Instrument>> for InstrumentController {
-    async fn handle_operation(&self, bn: CppBinaryMessage, model: Instrument) -> std::result::Result<CppResult<Instrument>, sqlx::Error> {
+    async fn handle_operation(&self, bn: CppBinaryMessage, model: Instrument) -> Result<CppResult<Instrument>, sqlx::Error> {
         validate_instrument(&model)?;
 
         match bn.sql_command {

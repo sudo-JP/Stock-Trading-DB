@@ -1,6 +1,6 @@
 use networking::CppTCPServer; 
 use stock_trading_db::*;
-use crate::models::instruments::Instrument;
+use crate::models::Instrument;
 
 
 #[tokio::main]
