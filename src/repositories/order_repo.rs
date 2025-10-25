@@ -1,7 +1,7 @@
 use crate::models::Order;
 use crate::repositories::prelude_repo::*;
 
-struct OrderRepository {
+pub struct OrderRepository {
     pool: PgPool
 }
 
@@ -34,7 +34,7 @@ impl OrderRepository {
         Ok(result.rows_affected() > 0)
     }
 
-    pub async fn update(&self, order: Order) -> Result<bool, sqlx::Error> {
+    pub async fn update(&self, order: &Order) -> Result<bool, sqlx::Error> {
         let result = sqlx::query("UPDATE orders SET
             client_order_id = $1,
             updated_at = $2,
@@ -64,8 +64,8 @@ impl OrderRepository {
         Ok(result.rows_affected() > 0)
     }
 
-    pub async fn delete(&self, id: &str) -> Result<bool, sqlx::Error> {
-        let result = sqlx::query("DELETE FROM orders WHERE id = $1")
+    pub async fn delete_order_id(&self, id: &str) -> Result<bool, sqlx::Error> {
+        let result = sqlx::query("DELETE FROM orders WHERE order_id = $1")
         .bind(id)
         .execute(&self.pool)
         .await?;
