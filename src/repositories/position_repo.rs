@@ -1,4 +1,4 @@
-use crate::models::positions::*; 
+use crate::models::Position;
 use crate::repositories::prelude_repo::*;
 
 pub struct PositionRepository {

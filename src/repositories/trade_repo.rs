@@ -1,7 +1,6 @@
-use crate::models::trades::*; 
+use crate::models::{Trade, RealizedPnl, PnlResult};
 use crate::repositories::prelude_repo::*;
 use std::collections::VecDeque;
-use std::cmp;
 
 pub struct TradeRepository {
     pool: PgPool 

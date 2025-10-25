@@ -1,4 +1,4 @@
-use crate::models::instruments::Instrument; 
+use crate::models::Instrument; 
 use crate::repositories::prelude_repo::*;
 
 
