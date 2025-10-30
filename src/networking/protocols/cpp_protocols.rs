@@ -25,10 +25,30 @@ pub enum SQLTable {
 }
 
 #[repr(C, packed)]
+pub struct Shutdown {
+    pub shutdown_flag: u32, 
+    pub exit_code: u32
+}
+
+#[repr(C, packed)]
+pub struct Handshake {
+    pub thread_count: u32,
+    pub port_range: u32 
+}
+
+#[repr(u32)]
+pub enum MessageType {
+    HANDSHAKE, 
+    SHUTDOWN, 
+    DB, 
+    UNKNOWN 
+}
+
+#[repr(C, packed)]
 pub struct CppBinaryMessage {
-    pub sql_command: SQLCommand,
+    pub msg_type: MessageType, 
     pub table: SQLTable, 
-    pub timestamp: u64,
+    pub sql_command: SQLCommand,
     pub data_size: u32
 } 
 
@@ -41,18 +61,17 @@ pub fn deserialize_header_cpp(header: &[u8]) -> Result<CppBinaryMessage> {
     }
 
     let mut reader = Cursor::new(header); 
-    let sql = reader.read_u32::<LittleEndian>()?;
+    let msg_type = reader.read_u32::<LittleEndian>()?; 
     let table = reader.read_u32::<LittleEndian>()?;
-    let timestamp = reader.read_u64::<LittleEndian>()?;
+    let sql = reader.read_u32::<LittleEndian>()?;
     let data_size = reader.read_u32::<LittleEndian>()?; 
 
     Ok(CppBinaryMessage {
-        sql_command: match sql {
-            1 => SQLCommand::INSERT, 
-            2 => SQLCommand::SELECT,
-            3 => SQLCommand::UPDATE, 
-            4 => SQLCommand::DELETE, 
-            _ => SQLCommand::UNKNOWN
+        msg_type: match msg_type {
+            1 => MessageType::HANDSHAKE, 
+            2 => MessageType::SHUTDOWN, 
+            3 => MessageType::DB, 
+            _ => MessageType::UNKNOWN
         }, 
         table: match table {
             1 => SQLTable::ACCOUNT, 
@@ -61,8 +80,14 @@ pub fn deserialize_header_cpp(header: &[u8]) -> Result<CppBinaryMessage> {
             4 => SQLTable::POSITION,
             _ => SQLTable::UNKNOWN 
         }, 
-        timestamp: timestamp, 
-        data_size: data_size} )
+        sql_command: match sql {
+            1 => SQLCommand::INSERT, 
+            2 => SQLCommand::SELECT,
+            3 => SQLCommand::UPDATE, 
+            4 => SQLCommand::DELETE, 
+            _ => SQLCommand::UNKNOWN
+        }, 
+        data_size: data_size})
 }
 
 
@@ -136,7 +161,9 @@ fn deserialize_order(packet: &[u8]) -> Result<Order> {
     let mut type_order = [0u8; 16]; 
     reader.read_exact(&mut type_order)?;
 
-    let time_in_force = reader.read_i64::<LittleEndian>()?;
+
+    let mut time_in_force = [0u8; 8]; 
+    reader.read_exact(&mut time_in_force)?; 
     let filled_qty = reader.read_u32::<LittleEndian>()?;
     let filled_avg_price = reader.read_f32::<LittleEndian>()?;
 
@@ -150,7 +177,7 @@ fn deserialize_order(packet: &[u8]) -> Result<Order> {
         symbol: bytes_to_string(&symbol),
         side: bytes_to_string(&side), 
         type_order: bytes_to_string(&type_order), 
-        time_in_force: i64_to_nano(time_in_force), 
+        time_in_force: bytes_to_string(&time_in_force), 
         filled_qty: filled_qty as i32,
         filled_avg_price: filled_avg_price
     })
