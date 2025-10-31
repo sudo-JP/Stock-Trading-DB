@@ -12,7 +12,7 @@ pub struct Order {
     pub symbol: String,
     pub side: String, 
     pub type_order: String, 
-    pub time_in_force: DateTime<Utc>, 
+    pub time_in_force: String,
 
     pub filled_qty: i32, 
     pub filled_avg_price: f32 

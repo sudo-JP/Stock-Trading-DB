@@ -55,7 +55,7 @@ impl OrderRepository {
             .bind(&order.symbol)
             .bind(&order.side)
             .bind(&order.type_order)
-            .bind(order.time_in_force)
+            .bind(&order.time_in_force)
             .bind(order.filled_qty)
             .bind(order.filled_avg_price)
             .bind(&order.order_id)
