@@ -1,13 +1,11 @@
 use dotenvy;
 use usize;
 
-use anyhow::{Result, bail};
+use anyhow::{Result, anyhow};
 use std::{
-    io::{BufReader, BufRead, Read, Error, ErrorKind},
-    net::{TcpListener, TcpStream},
-    mem::{size_of}
+    io::{BufRead, BufReader, Error, ErrorKind, Read}, mem::size_of, net::{TcpListener, TcpStream}, vec
 }; 
-use crate::{networking::protocols::cpp_protocols};
+use crate::{networking::protocols::cpp_protocols, protocols::CppBinaryMessage};
 
 
 
@@ -26,7 +24,8 @@ pub struct CppTCPServer {
     listener: TcpListener,
 }
 
-fn handle_stream(mut stream: TcpStream) -> Result <()> {
+
+fn handle_stream(mut stream: TcpStream) -> Result<Vec<u8>> {
     // First read the header
 
     let header: usize = size_of::<cpp_protocols::CppBinaryMessage>(); 
@@ -42,15 +41,16 @@ fn handle_stream(mut stream: TcpStream) -> Result <()> {
     let mut buffer = vec![0u8; data_size]; // Filed out buffer with 0 for body
     stream.read_exact(&mut buffer)?;
     
-    cpp_protocols::deserialize_account(&buffer)?;
+    //cpp_protocols::deserialize_account(&buffer)?;
 
     // Now, read number of data from stream
     //let body = cpp_protocols::deserialize_data_cpp(&header, &buffer)?;
 
     //let body_data = cpp_protocols::deserialize_data_cpp(&header, )
     
-    Ok(())
+    Ok(buffer)
 }
+
 
 impl CppTCPServer {
     pub fn new() -> Result<Self, Box<dyn std::error::Error>> {
@@ -71,5 +71,13 @@ impl CppTCPServer {
         }
 
         Ok(())
+    }
+
+    pub fn handshake(&self) -> Result<cpp_protocols::Handshake> {
+        let stream = self.listener.accept().unwrap();
+        let bytes = handle_stream(stream.0)?;
+        let handshake = cpp_protocols::craft_handshake(&bytes)?;    
+        Ok(handshake)
+
     }
 }

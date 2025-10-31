@@ -16,3 +16,20 @@ CREATE TABLE IF NOT EXISTS orders (
     filled_avg_price DECIMAL DEFAULT 0 
 ); 
  
+CREATE TABLE IF NOT EXISTS positions (
+    position_id SERIAL PRIMARY KEY, 
+    instrument_id INTEGER REFERENCES instruments(instrument_id) ON DELETE RESTRICT, 
+    quantity DECIMAL NOT NULL, 
+    average_cost DECIMAL NOT NULL, 
+    market_value DECIMAL NOT NULL, 
+    unrealized_pnl DECIMAL NOT NULL 
+); 
+
+ALTER TABLE positions
+ADD (
+    symbol TEXT NOT NULL, 
+    exchange TEXT NOT NULL, 
+    instr_class TEXT NOT NULL, 
+    
+);
+

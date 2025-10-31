@@ -293,3 +293,12 @@ pub fn deserialize_asset(packet: &[u8]) -> Result<Instrument> {
     
 }
 
+pub fn craft_handshake(packet: &[u8]) -> Result<Handshake> {
+    let mut reader = Cursor::new(packet); 
+    let threads = reader.read_u32::<LittleEndian>()?;
+    let ports = reader.read_u32::<LittleEndian>()?;
+    Ok(Handshake{
+        thread_count: threads,
+        port_range: ports
+    })
+}
