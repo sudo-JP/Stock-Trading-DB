@@ -5,7 +5,7 @@ use anyhow::{Result, anyhow};
 use std::{
     io::{BufRead, BufReader, Error, ErrorKind, Read}, mem::size_of, net::{TcpListener, TcpStream}, vec
 }; 
-use crate::{networking::protocols::cpp_protocols, protocols::CppBinaryMessage};
+use crate::{networking::protocols::cpp_protocols::*, protocols::CppBinaryMessage};
 
 
 
@@ -25,15 +25,15 @@ pub struct CppTCPServer {
 }
 
 
-fn handle_stream(mut stream: TcpStream) -> Result<Vec<u8>> {
+fn handle_stream(mut stream: TcpStream) -> Result<(CppBinaryMessage, Vec<u8>)> {
     // First read the header
 
-    let header: usize = size_of::<cpp_protocols::CppBinaryMessage>(); 
+    let header: usize = size_of::<CppBinaryMessage>(); 
     let mut buffer = vec![0u8; header]; // Filed out buffer with 0 for header 
 
     // Second, deserialize the header to find the remaining size 
     stream.read_exact(&mut buffer)?;
-    let header = cpp_protocols::deserialize_header_cpp(&buffer)?;
+    let header = deserialize_header_cpp(&buffer)?;
     let data_size: usize = usize::try_from(header.data_size)?;
 
 
@@ -48,7 +48,7 @@ fn handle_stream(mut stream: TcpStream) -> Result<Vec<u8>> {
 
     //let body_data = cpp_protocols::deserialize_data_cpp(&header, )
     
-    Ok(buffer)
+    Ok((header, buffer))
 }
 
 
@@ -73,11 +73,14 @@ impl CppTCPServer {
         Ok(())
     }
 
-    pub fn handshake(&self) -> Result<cpp_protocols::Handshake> {
+    pub fn receive_event(&self) -> Result<Event> {
         let stream = self.listener.accept().unwrap();
-        let bytes = handle_stream(stream.0)?;
-        let handshake = cpp_protocols::craft_handshake(&bytes)?;    
-        Ok(handshake)
+        let (header, payload) = handle_stream(stream.0)?;
+        Ok(match header.msg_type {
+            MessageType::HANDSHAKE => Event::HANDSHAKE(craft_handshake(&payload)?),
+            MessageType::SHUTDOWN => Event::SHUTDOWN,
+            _ => Event::ERROR(anyhow!("Not valid event"))
+        })
 
     }
 }
