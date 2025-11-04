@@ -113,10 +113,10 @@
 
 
 ## Main
-- [ ] Establish handshake protocol
-- [ ] Spawn threads based on handshake
-- [ ] Receive shutdown protocol
-- [ ] Join threads and gracefully shutdown the system
+- [x] Establish handshake protocol
+- [x] Spawn threads based on handshake
+- [x] Receive shutdown protocol
+- [x] Join threads and gracefully shutdown the system
 - [ ] Initialize database singleton and connection pool
 - [ ] Start TCP listener(s) for C++ and Python ML clients
 - [ ] Initialize task queues for C++ and Python ML
