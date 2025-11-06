@@ -101,39 +101,68 @@ fn i64_to_nano(timestamp: i64) -> DateTime<Utc> {
 
 pub fn deserialize_account(packet: &[u8]) -> Result<Account> {
     let mut reader = Cursor::new(packet); 
+
+    // ID and currency 
     let mut account_id = [0u8; 64];
     reader.read_exact(&mut account_id)?;
 
     let mut currency = [0u8; 4]; 
     reader.read_exact(&mut currency)?;
 
-    let buying_power = reader.read_f64::<LittleEndian>()?;  
-
+    // Owned Numeric 
     let cash = reader.read_f64::<LittleEndian>()?;
-    let portfolio = reader.read_f64::<LittleEndian>()?; 
+    let buying_power = reader.read_f64::<LittleEndian>()?;  
     let equity = reader.read_f64::<LittleEndian>()?;
-    let unrealized = reader.read_f64::<LittleEndian>()?;
-    let real = reader.read_f64::<LittleEndian>()?; 
+    let portfolio = reader.read_f64::<LittleEndian>()?; 
 
-    let status = reader.read_i32::<LittleEndian>()?;
-    let last_upd = reader.read_i64::<LittleEndian>()?;
+    // Futures 
+    let eff_buying_power = reader.read_f64::<LittleEndian>()?; 
+    let daytrading_buying_power = reader.read_f64::<LittleEndian>()?; 
+    let regt = reader.read_f64::<LittleEndian>()?; 
+    let non_marg = reader.read_f64::<LittleEndian>()?; 
+    let last_equity = reader.read_f64::<LittleEndian>()?; 
+    let sma = reader.read_f64::<LittleEndian>()?; 
+    let pos_mrk = reader.read_f64::<LittleEndian>()?; 
+    let long_mrk = reader.read_f64::<LittleEndian>()?; 
+    let short_mrk = reader.read_f64::<LittleEndian>()?; 
+
+    // Metadata 
+    let mut status = [0u8; 16]; 
+    reader.read_exact(&mut status); 
+
+    let mut cryp_stat = [0u8; 16]; 
+    reader.read_exact(&mut cryp_stat); 
+
+    let bal_asof = i64_to_nano(reader.read_i64::<LittleEndian>()?);
+    let day_cnt = reader.read_f64::<LittleEndian>()?; 
 
 
     Ok(Account{
-        account_id: bytes_to_string(&account_id),
+        id: bytes_to_string(&account_id),
         currency: bytes_to_string(&currency),
-        buying_power: buying_power, 
+
+        // Owned numeric 
         cash: cash, 
-        portfolio_value: portfolio, 
+        buying_power: buying_power, 
         equity: equity, 
-        unrealized_pl: unrealized, 
-        realized_pl: real, 
-        status: match status {
-            1 => "ACTIVE".to_owned(),
-            2 => "INACTIVE".to_owned(), 
-            _ => "UNKNOWN".to_owned()
-        }, 
-        last_update: i64_to_nano(last_upd)
+        portfolio_value: portfolio, 
+
+        // Futures 
+        effective_buying_power: eff_buying_power, 
+        daytrading_buying_power: daytrading_buying_power,
+        regt_buying_power: regt, 
+        non_marginable_buying_power: non_marg, 
+        last_equity: last_equity, 
+        sma: sma, 
+        position_market_value: pos_mrk, 
+        long_market_value: long_mrk, 
+        short_market_value: short_mrk,
+
+        // Metadata 
+        status: bytes_to_string(&status),
+        crypto_status: bytes_to_string(&cryp_stat), 
+        balance_asof: bal_asof, 
+        daytrade_count: day_cnt
     })
 }
 

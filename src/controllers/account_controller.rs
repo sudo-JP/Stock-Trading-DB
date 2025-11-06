@@ -40,10 +40,10 @@ impl CppController<Account, CppResult<Account>> for AccountController {
                 self.repo.upsert(&acc).await?;
             } 
             SQLCommand::DELETE => {
-                self.repo.delete_by_id(&acc.account_id).await?;
+                self.repo.delete_by_id(&acc.id).await?;
             }
             SQLCommand::SELECT => {
-                return Ok(CppResult::VALUE(self.repo.query_by_id(&acc.account_id).await?));
+                return Ok(CppResult::VALUE(self.repo.query_by_id(&acc.id).await?));
             }
                 _ => { return Err(sqlx::Error::Protocol("Unknown SQL command".into())); }
         }; 

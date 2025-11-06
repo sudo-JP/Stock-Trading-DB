@@ -3,6 +3,7 @@ pub mod repositories;
 pub mod models;
 pub mod networking;
 pub mod controllers;
+pub mod macros;
 
 pub use crate::controllers::*;
 pub use crate::models::*;
