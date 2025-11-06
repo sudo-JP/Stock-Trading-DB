@@ -1,7 +1,26 @@
 #[macro_export]
 macro_rules! sql_str {
-    (INSERT, $( $attr:ident ),*) => {
+    (INSERT, $count:expr, $table:literal, $( $attr:ident ),*) => {
         {
+            let mut query = String::from("INSERT INTO "); 
+            query.push_str($table); 
+            query.push_str(" (");
+            $(
+                query.push_str(stringify!($attr))
+                query.push_str(", ");
+            )*
+            query.truncate(query.len() - 2); // removes trailing ", "
+
+            query.push_str(") VALUES (");
+            let n: usize = $count as usize;
+            for i in 1..=n {
+                query.push_str(&format!("${}", i));
+                if i != n {
+                    query.push_str(", "); 
+                }
+            }
+            query.push_str(");");
+            query 
 
         }
     };
@@ -9,7 +28,7 @@ macro_rules! sql_str {
         {
             let mut query = String::from("INSERT INTO "); 
             query.push_str($table);
-            query.push_str("(");
+            query.push_str(" (");
 
             $(
                 query.push_str(stringify!($attr))
