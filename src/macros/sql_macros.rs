@@ -1,15 +1,24 @@
 #[macro_export]
+macro_rules! sql_col {
+    ($table:literal, $( $attr:ident ),*) => {
+        let mut query = String::from("INSERT INTO "); 
+        query.push_str($table); 
+        query.push_str(" (");
+        $(
+            query.push_str(stringify!($attr))
+            query.push_str(", ");
+        )*
+
+        query.truncate(query.len() - 2); // removes trailing ", "
+        query 
+    };
+}
+
+#[macro_export]
 macro_rules! sql_str {
-    (INSERT, $count:expr, $table:literal, $( $attr:ident ),*) => {
+    (INSERT, $count:expr, $table:literal, $structure:expr, $( $attr:ident ),*) => {
         {
-            let mut query = String::from("INSERT INTO "); 
-            query.push_str($table); 
-            query.push_str(" (");
-            $(
-                query.push_str(stringify!($attr))
-                query.push_str(", ");
-            )*
-            query.truncate(query.len() - 2); // removes trailing ", "
+            let mut query = sql_col!($table, $($attr),*);
 
             query.push_str(") VALUES (");
             let n: usize = $count as usize;
@@ -60,37 +69,40 @@ macro_rules! sql_str {
             query 
         }
     };
-    (DELETE) => {
-    };
-    (SELECT) => {
-    };
     ( $($other:tt)* ) => {
-        eprint!("Invalid macro usage");
+        {
+            let e = String::from("Invalid macro usage");
+            eprint!("{}", e);
+            e
+        }
     }; 
 }
 
 #[macro_export]
 macro_rules! sql_repo {
-    (query, $query:expr, $structure:expr, $pool:expr, $( $attr:ident ),*) => {
+
+
+    (query, $query:expr, $structure:expr, $( $attr:ident ),*) => {
         {
-            sqlx::query($query)
+            let q = sqlx::query($query)
             $(
                 .bind(&$structure.$attr)
-            )*
-            .execute($pool)
-            .await?
+            )*;
+            q
         }
     }; 
 
-    (query_as, $query:expr, $structure:expr, $struct_type:ty, $( $attr:ident ),*) => {
+    (query_as, $query:expr, $struct_type:ty, $( $attr:ident ),*) => {
         {
-            sqlx::query_as::<sqlx::Postgres, $struct_type>($query)
+
+            let q  = sqlx::query_as::<sqlx::Postgres, $struct_type>($query)
             $(
-                .bind($structure.$attr)
-            )*
+                .bind($attr)
+            )*; 
+            q
         }
     };
     ( $($other:tt)* ) => {
-        eprint!("Invalid macro usage");
+        compile_error!("Invalid macro usage");
     }; 
 }
