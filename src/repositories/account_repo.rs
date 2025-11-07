@@ -14,25 +14,19 @@ impl AccountRepository {
      * This should fetch one, since we only update and insert 
      * */
     pub async fn query_by_id(&self, id: &str) -> Result<Account, sqlx::Error> {
-        let result = crate::sql_repo!(query_as, 
-            "SELECT * FROM accounts WHERE account_id = $1".into(),
-            Account, id).fetch_one(&self.pool).await?; 
+        let result = sqlx::query_as::<sqlx::Postgres, Account>( 
+            "SELECT * FROM accounts WHERE account_id = $1")
+            .bind(id)
+            .fetch_one(&self.pool)
+            .await?; 
 
         Ok(result)
     }
 
 
     pub async fn upsert(&self, account: &Account) -> Result<bool, sqlx::Error> {
-        let query_str: String = crate::sql_str!(UPSERT, 19, "account", 
-            id, currency, cash, buying_power, equity, portfolio_value,
-            effective_buying_power, daytrading_buying_power, regt_buying_power,
-            non_marginable_buying_power, last_equity, sma, position_market_value,
-            long_market_value, short_market_value, status, crypto_status,
-            balance_asof, daytrade_count
-        );
-
-        crate::sql_repo!(query, &query_str, &account, 
-            id, currency, cash, buying_power, equity, portfolio_value,
+        crate::sql_insert!(UPSERT, "account", account, 
+            "id", currency, cash, buying_power, equity, portfolio_value,
             effective_buying_power, daytrading_buying_power, regt_buying_power,
             non_marginable_buying_power, last_equity, sma, position_market_value,
             long_market_value, short_market_value, status, crypto_status,

@@ -10,3 +10,4 @@ pub use crate::models::*;
 pub use crate::repositories::*;
 pub use crate::database::*;
 pub use crate::networking::*;
+pub use crate::macros::sql_placeholders;

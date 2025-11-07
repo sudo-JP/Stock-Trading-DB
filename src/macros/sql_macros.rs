@@ -1,21 +1,5 @@
-#[macro_export]
-macro_rules! sql_col {
-    ($table:literal, $( $attr:ident ),*) => {
-        let mut query = String::from("INSERT INTO "); 
-        query.push_str($table); 
-        query.push_str(" (");
-        $(
-            query.push_str(stringify!($attr))
-            query.push_str(", ");
-        )*
 
-        query.truncate(query.len() - 2); // removes trailing ", "
-        query 
-    };
-}
-
-
-fn sql_placeholders(n: usize) -> String {
+pub fn sql_placeholders(n: usize) -> String {
     let mut placeholders = String::from(""); 
     for i in 1..=n {
         placeholders.push_str(&format!("${}", i));
@@ -27,106 +11,87 @@ fn sql_placeholders(n: usize) -> String {
 }
 
 /*
- * This is for tail recursion improvision
+ * This is for tail recursion optimization
  * */
 #[macro_export]
 macro_rules! count_args_helper {
     ($acc:expr) => { $acc };
-    ($acc:expr, $x:ident, $( $xs:ident ),* ) => { count_args_helper!($acc + 1, $($xs),*) }
+    ($acc:expr, $x:ident) => { $acc + 1 };
+    ($acc:expr, $x:ident, $( $xs:ident ),+ ) => 
+    { crate::count_args_helper!($acc + 1, $($xs),+) }
 }
 
 #[macro_export]
 macro_rules! count_args {
-    ( $( $attr:ident ),* ) => { 
-        count_args_helper!(0, $($attr),*)
+    ( $( $attr:ident ),+ ) => { 
+        crate::count_args_helper!(0, $($attr),+)
     }
 }
 
-
 #[macro_export]
-macro_rules! sql_str {
-    (INSERT, $table:literal, $structure:expr, $( $attr:ident ),*) => {
+macro_rules! sql_col {
+    ($table:literal, $( $attr:ident ),+) => {
         {
-            let mut query = sql_col!($table, $($attr),*);
+            let mut sql_stmt = String::from("INSERT INTO "); 
+            sql_stmt.push_str($table); 
+            sql_stmt.push_str(" (");
+            $(
+                sql_stmt.push_str(stringify!($attr));
+                sql_stmt.push_str(", ");
+            )+
 
-            query.push_str(") VALUES (");
-            let n: usize = count_args!($($attr),*);
-            query.push_str(sql_placeholders(n)); 
-            query.push_str(");");
-            query 
+            sql_stmt.truncate(sql_stmt.len() - 2); // removes trailing ", "
+            sql_stmt.push_str(") VALUES (");
+            let n: usize = crate::count_args!($($attr),+);
+            sql_stmt.push_str(&crate::macros::sql_placeholders(n)); 
+            sql_stmt 
 
         }
     };
-    (UPSERT, $count:expr, $conflict:literal, $table:literal, $( $attr:ident ),*) => {
-        {
-            let mut query = String::from("INSERT INTO "); 
-            query.push_str($table);
-            query.push_str(" (");
-
-            $(
-                query.push_str(stringify!($attr))
-                query.push_str(", ");
-            )*
-            query.truncate(query.len() - 2); // removes trailing ", "
-
-            query.push_str(") VALUES (");
-            let n: usize = $count as usize;
-            for i in 1..=n {
-                query.push_str(&format!("${}", i));
-                if i != n {
-                    query.push_str(", "); 
-                }
-            }
-
-            query.push_str(") ON CONFLICT (");
-            query.push_str($conflict); 
-            query.push_str(") DO UPDATE SET ");
-
-            $(
-                let setting = format!("{} = EXCLUDED.{}", stringify!($attr), stringify!($attr));
-                query.push_str(&setting);
-                query.push_str(", ");
-            )*
-
-            query.truncate(query.len() - 2); // removes trailing ", "
-            query.push(';');
-            query 
-        }
-    };
-    ( $($other:tt)* ) => {
-        {
-            let e = String::from("Invalid macro usage");
-            eprint!("{}", e);
-            e
-        }
-    }; 
 }
 
+
+
 #[macro_export]
-macro_rules! sql_repo {
-
-
-    (query, $query:expr, $structure:expr, $( $attr:ident ),*) => {
+macro_rules! sql_insert {
+    (INSERT, $table:literal, $structure:expr, $( $attr:ident ),+) => {
         {
-            let q = sqlx::query($query)
+            sqlx::query({
+                let mut sql_stmt = sql_col!($table, $($attr),+);
+                sql_stmt.push_str(");");
+                sql_stmt
+            }.as_str())
             $(
                 .bind(&$structure.$attr)
-            )*;
-            q
-        }
-    }; 
-
-    (query_as, $query:expr, $struct_type:ty, $( $attr:ident ),*) => {
-        {
-
-            let q  = sqlx::query_as::<sqlx::Postgres, $struct_type>($query)
-            $(
-                .bind($attr)
-            )*; 
-            q
+            )+
+            
         }
     };
-    ( $($other:tt)* ) => {
-        compile_error!("Invalid macro usage");
-    }; 
+    (UPSERT, $table:literal, $structure:expr, $conflict:literal, $( $attr:ident ),+) => {
+        {
+            {
+                sqlx::query({
+                    let mut sql_stmt = crate::sql_col!($table, $($attr),+);
+
+                    sql_stmt.push_str(") ON CONFLICT (");
+                    sql_stmt.push_str($conflict); 
+                    sql_stmt.push_str(") DO UPDATE SET ");
+
+                    $(
+                        let setting = format!("{} = EXCLUDED.{}", stringify!($attr), stringify!($attr));
+                        sql_stmt.push_str(&setting);
+                        sql_stmt.push_str(", ");
+                    )+
+
+                    sql_stmt.truncate(sql_stmt.len() - 2); // removes trailing ", "
+                    sql_stmt.push(';');
+                    sql_stmt
+                }.as_str())
+                $(
+                    .bind(&$structure.$attr)
+                )+
+            }
+        }
+    };
 }
+
