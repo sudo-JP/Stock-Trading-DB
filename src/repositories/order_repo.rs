@@ -1,5 +1,6 @@
 use crate::models::Order;
 use crate::repositories::prelude_repo::*;
+use crate::sql_col;
 
 pub struct OrderRepository {
     pool: PgPool
@@ -11,30 +12,18 @@ impl OrderRepository {
     }
 
     pub async fn insert(&self, order: &Order) -> Result<bool, sqlx::Error> {
-        let result = sqlx::query("
-            INSERT INTO orders (order_id, client_order_id, created_at, updated_at, submitted_at, 
-            filled_at, symbol, side, type_order, time_in_force, filled_qty, filled_avg_price) 
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12);
-            ")
-            .bind(&order.order_id)
-            .bind(&order.client_order_id)
-            .bind(&order.created_at)
-            .bind(&order.updated_at)
-            .bind(&order.updated_at)
-            .bind(&order.submitted_at)
-            .bind(&order.filled_at)
-            .bind(&order.symbol)
-            .bind(&order.side)
-            .bind(&order.type_order)
-            .bind(&order.time_in_force)
-            .bind(order.filled_qty)
-            .bind(order.filled_avg_price)
+        let result = crate::sql_insert!(INSERT, "orders", order,
+            order_id, created_at, updated_at, submitted_at, filled_at,
+            status, instrument_id, symbol, side, type_order, time_in_force,
+            qty, filled_qty, filled_avg_price, instrument_class, 
+            position_intent, notional, limit_price, stop_price,
+            extended_hours)
             .execute(&self.pool)
             .await?;
         Ok(result.rows_affected() > 0)
     }
 
-    pub async fn update(&self, order: &Order) -> Result<bool, sqlx::Error> {
+    /*pub async fn update(&self, order: &Order) -> Result<bool, sqlx::Error> {
         let result = sqlx::query("UPDATE orders SET
             client_order_id = $1,
             updated_at = $2,
@@ -62,7 +51,7 @@ impl OrderRepository {
             .execute(&self.pool)
             .await?;
         Ok(result.rows_affected() > 0)
-    }
+    }*/
 
     pub async fn delete_order_id(&self, id: &str) -> Result<bool, sqlx::Error> {
         let result = sqlx::query("DELETE FROM orders WHERE order_id = $1")

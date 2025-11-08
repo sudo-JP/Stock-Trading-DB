@@ -25,7 +25,7 @@ impl AccountRepository {
 
 
     pub async fn upsert(&self, account: &Account) -> Result<bool, sqlx::Error> {
-        crate::sql_insert!(UPSERT, "account", account, 
+        let result = crate::sql_insert!(UPSERT, "account", account, 
             "id", currency, cash, buying_power, equity, portfolio_value,
             effective_buying_power, daytrading_buying_power, regt_buying_power,
             non_marginable_buying_power, last_equity, sma, position_market_value,
@@ -33,7 +33,7 @@ impl AccountRepository {
             balance_asof, daytrade_count
         ).execute(&self.pool).await?;
 
-        Ok(true)
+        Ok(result.rows_affected() > 0)
     }
 
     pub async fn delete_by_id(&self, account_id: &str) -> Result<bool, sqlx::Error> {

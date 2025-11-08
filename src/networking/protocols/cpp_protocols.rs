@@ -172,13 +172,16 @@ fn deserialize_order(packet: &[u8]) -> Result<Order> {
     let mut id = [0u8; 64];
     reader.read_exact(&mut id)?;
 
-    let mut client_order_id = [0u8; 64]; 
-    reader.read_exact(&mut client_order_id)?; 
-
     let created_at = reader.read_i64::<LittleEndian>()?;
     let updated_at = reader.read_i64::<LittleEndian>()?;
     let submitted_at = reader.read_i64::<LittleEndian>()?;
     let filled_at = reader.read_i64::<LittleEndian>()?;
+
+    let mut status = [0u8; 16]; 
+    reader.read_exact(&mut status)?;
+
+    let mut asset_id = [0u8; 64]; 
+    reader.read_exact(&mut asset_id)?;
 
     let mut symbol = [0u8; 16]; 
     reader.read_exact(&mut symbol)?;
@@ -192,76 +195,114 @@ fn deserialize_order(packet: &[u8]) -> Result<Order> {
 
     let mut time_in_force = [0u8; 8]; 
     reader.read_exact(&mut time_in_force)?; 
-    let filled_qty = reader.read_u32::<LittleEndian>()?;
-    let filled_avg_price = reader.read_f32::<LittleEndian>()?;
+
+    let qty = reader.read_f64::<LittleEndian>()?;
+    let filled_qty = reader.read_f64::<LittleEndian>()?;
+    let filled_avg_price = reader.read_f64::<LittleEndian>()?;
+
+    let mut asset_class = [0u8; 16]; 
+    reader.read_exact(&mut asset_class)?; 
+
+    let mut position_intent = [0u8; 16]; 
+    reader.read_exact(&mut position_intent)?; 
+
+    let notional = reader.read_f64::<LittleEndian>()?;
+    let limit_price = reader.read_f64::<LittleEndian>()?;
+    let stop_price = reader.read_f64::<LittleEndian>()?;
+    let extended_hours = reader.read_u8()? != 0;
 
     Ok(Order{
         order_id: bytes_to_string(&id), 
-        client_order_id: bytes_to_string(&client_order_id), 
+
         created_at: i64_to_nano(created_at), 
         updated_at: i64_to_nano(updated_at), 
         submitted_at: i64_to_nano(submitted_at), 
         filled_at: i64_to_nano(filled_at), 
+        status: bytes_to_string(&status), 
+
+        instrument_id: bytes_to_string(&asset_id), 
         symbol: bytes_to_string(&symbol),
         side: bytes_to_string(&side), 
         type_order: bytes_to_string(&type_order), 
         time_in_force: bytes_to_string(&time_in_force), 
-        filled_qty: filled_qty as i32,
-        filled_avg_price: filled_avg_price
+
+        qty: qty,
+        filled_qty: filled_qty,
+        filled_avg_price: filled_avg_price,
+
+        instrument_class: bytes_to_string(&asset_class), 
+        position_intent: bytes_to_string(&position_intent), 
+        notional: notional, 
+
+        limit_price: limit_price, 
+        stop_price: stop_price, 
+        extended_hours: extended_hours
     })
 }
 
 fn deserialize_position(packet: &[u8]) -> Result<Position> {
     let mut reader = Cursor::new(packet); 
+
     let mut asset_id = [0u8; 64];
     reader.read_exact(&mut asset_id)?;
 
     let mut symbol = [0u8; 16]; 
     reader.read_exact(&mut symbol)?;
 
-    let mut exchange = [0u8; 16];
+    let mut exchange = [0u8; 8];
     reader.read_exact(&mut exchange)?; 
 
     let mut asset_class = [0u8; 16]; 
     reader.read_exact(&mut asset_class)?; 
 
-    let qty = reader.read_u32::<LittleEndian>()?;
-    let avg_entry_price = reader.read_f64::<LittleEndian>()?;
-
     let mut side = [0u8; 8]; 
     reader.read_exact(&mut side)?; 
 
+    let qty = reader.read_f64::<LittleEndian>()?;
+    let qty_available = reader.read_f64::<LittleEndian>()?;
+
+    let avg_entry_price = reader.read_f64::<LittleEndian>()?;
     let market_value = reader.read_f64::<LittleEndian>()?;
     let cost_basis = reader.read_f64::<LittleEndian>()?;
 
     let unrealized_pl = reader.read_f64::<LittleEndian>()?;
     let unrealized_plpc = reader.read_f64::<LittleEndian>()?;
-
     let unrealized_intraday_pl = reader.read_f64::<LittleEndian>()?;
     let unrealized_intraday_plpc = reader.read_f64::<LittleEndian>()?;
+
     let current_price = reader.read_f64::<LittleEndian>()?;
     let lastday_price = reader.read_f64::<LittleEndian>()?;
     let change_today = reader.read_f64::<LittleEndian>()?;
 
+    let asset_marginable = reader.read_u8()? != 0;
+    let last_update = i64_to_nano(reader.read_i64::<LittleEndian>()?);
 
     Ok(Position{
         instrument_id: bytes_to_string(&asset_id), 
         symbol: bytes_to_string(&symbol), 
         exchange: bytes_to_string(&exchange), 
-        instr_class: bytes_to_string(&asset_class), 
-        qty: qty as i32, 
-        avg_entry_price: avg_entry_price,
+        instrument_class: bytes_to_string(&asset_class), 
         side: bytes_to_string(&side), 
-        cost_basis: cost_basis,
-        average_cost: avg_entry_price, // About the same, will change it 
+    
+
+        qty: qty, 
+        qty_available: qty_available, 
+
+        avg_entry_price: avg_entry_price,
         market_value: market_value, 
+        cost_basis: cost_basis,
+        
         unrealized_pl: unrealized_pl, 
         unrealized_plpc: unrealized_plpc, 
         unrealized_intraday_pl: unrealized_intraday_pl,
         unrealized_intraday_plpc: unrealized_intraday_plpc,
+
         current_price: current_price, 
         lastday_price: lastday_price,
-        change_today: change_today
+        change_today: change_today,
+
+        instrument_marginable: asset_marginable, 
+        last_update: last_update
     })
 
 }
@@ -272,51 +313,49 @@ pub fn deserialize_asset(packet: &[u8]) -> Result<Instrument> {
     let mut id = [0u8; 64];
     reader.read_exact(&mut id)?;
 
-    let mut asset_class = [0u8; 16]; 
-    reader.read_exact(&mut asset_class)?; 
+    let mut symbol= [0u8; 16]; 
+    reader.read_exact(&mut symbol)?; 
+
+    let mut name = [0u8; 64];
+    reader.read_exact(&mut name)?;
+
+    let mut asset_class = [0u8; 16];
+    reader.read_exact(&mut asset_class)?;
 
     let mut exchange = [0u8; 16];
     reader.read_exact(&mut exchange)?; 
 
-    let mut symbol = [0u8; 16]; 
-    reader.read_exact(&mut symbol)?;
+    let mut status = [0u8; 8];
+    reader.read_exact(&mut status)?; 
 
-    let mut name = [0u8; 32];
-    reader.read_exact(&mut name)?;
-
-    let status = reader.read_u32::<LittleEndian>()?;
     let tradeable = reader.read_u8()? != 0;
     let marginable = reader.read_u8()? != 0;
     let shortable = reader.read_u8()? != 0;
-    let easy_to_borrow = reader.read_u8()? != 0;
     let fractionable = reader.read_u8()? != 0;
+    let easy_to_borrow = reader.read_u8()? != 0;
+
+    let maintenance_margin_requirement = reader.read_f64::<LittleEndian>()?;
+    let margin_requirement_long = reader.read_f64::<LittleEndian>()?;
+    let margin_requirement_short = reader.read_f64::<LittleEndian>()?;
 
     Ok(Instrument{
         instrument_id: bytes_to_string(&id), 
-        instrument_class: bytes_to_string(&asset_class), 
-        exchange: bytes_to_string(&exchange), 
         symbol: bytes_to_string(&symbol), 
         name: bytes_to_string(&name),
-        status: match status {
-            1 => "ACTIVE".to_owned(), 
-            2 => "INACTIVE".to_owned(), 
-            3 => "PENDING".to_owned(), 
-            4 => "SUSPENDED".to_owned(), 
-            5 => "CLOSED".to_owned(), 
-            6 => "DELISTED".to_owned(), 
-            7 => "MAINTENANCE".to_owned(),
-            _ => "UNKNOWN".to_owned(),
-        }, 
+        instrument_class: bytes_to_string(&asset_class),
+        exchange: bytes_to_string(&exchange), 
+        status: bytes_to_string(&status),
+
         tradeable: tradeable, 
         marginable: marginable, 
         shortable: shortable, 
-        easy_to_borrow: easy_to_borrow, 
         fractionable: fractionable, 
-        currency: "USD".to_owned(),
-        instr_type: bytes_to_string(&asset_class), 
-        multiplier: 1.0, 
-        min_tick: None, 
+        easy_to_borrow: easy_to_borrow, 
+        
+        maintenance_margin_requirement: maintenance_margin_requirement,
 
+        margin_requirement_long: margin_requirement_long,
+        margin_requirement_short: margin_requirement_short
     })
     
 }

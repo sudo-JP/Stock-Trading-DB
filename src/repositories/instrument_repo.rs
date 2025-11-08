@@ -23,23 +23,11 @@ impl InstrumentRepository {
     }
 
     pub async fn upsert(&self, instrument: &Instrument) -> Result<bool, sqlx::Error> {
-        let result = sqlx::query(
-            r#"INSERT INTO instruments (symbol, name, instr_type, currency, exchange, multiplier, min_tick) VALUES ($1, $2, $3, $4, $5, $6, $7) ON CONFLICT (symbol) DO UPDATE SET
-            symbol = EXCLUDED.symbol,
-            name = EXCLUDED.name, 
-            instr_type = EXCLUDED.instr_type,
-            currency = EXCLUDED.currency,
-            exchange = EXCLUDED.exchange, 
-            multiplier = EXCLUDED.multiplier
-            min_tick = EXCLUDED.min_tick;"#
-            )
-            .bind(&instrument.symbol)
-            .bind(&instrument.name)
-            .bind(&instrument.instr_type)
-            .bind(&instrument.currency)
-            .bind(&instrument.exchange)
-            .bind(&instrument.multiplier)
-            .bind(&instrument.min_tick)
+        let result = crate::sql_insert!(UPSERT, "instruments", instrument, 
+            "instrument_id", instrument_id, symbol, name, instrument_class,
+            exchange, status, tradeable, marginable, shortable,
+            fractionable, easy_to_borrow, maintenance_margin_requirement, 
+            margin_requirement_long, margin_requirement_short)
             .execute(&self.pool)
             .await?;
 
