@@ -12,9 +12,6 @@ fn validate_instrument(instr: &Instrument) -> Result<(), sqlx::Error> {
     else if instr.exchange.is_empty() {
         return Err(sqlx::Error::Protocol("No exchange".into()));
     }
-    else if instr.multiplier <= 0.0 {
-        return Err(sqlx::Error::Protocol("Negative multiplier".into()));
-    }
     
     Ok(())
 

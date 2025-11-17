@@ -51,6 +51,10 @@ pub struct CppBinaryMessage {
     pub data_size: u32
 } 
 
+pub struct CppTask {
+    header: CppBinaryMessage,
+    payload: Vec<u8> 
+}
 
 // Deserialize 
 pub fn deserialize_header_cpp(header: &[u8]) -> Result<CppBinaryMessage> {
