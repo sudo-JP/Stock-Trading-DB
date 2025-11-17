@@ -69,28 +69,26 @@ macro_rules! sql_insert {
     };
     (UPSERT, $table:literal, $structure:expr, $conflict:literal, $( $attr:ident ),+) => {
         {
-            {
-                sqlx::query({
-                    let mut sql_stmt = crate::sql_col!($table, $($attr),+);
+            sqlx::query({
+                let mut sql_stmt = crate::sql_col!($table, $($attr),+);
 
-                    sql_stmt.push_str(") ON CONFLICT (");
-                    sql_stmt.push_str($conflict); 
-                    sql_stmt.push_str(") DO UPDATE SET ");
+                sql_stmt.push_str(") ON CONFLICT (");
+                sql_stmt.push_str($conflict); 
+                sql_stmt.push_str(") DO UPDATE SET ");
 
-                    $(
-                        let setting = format!("{} = EXCLUDED.{}", stringify!($attr), stringify!($attr));
-                        sql_stmt.push_str(&setting);
-                        sql_stmt.push_str(", ");
-                    )+
-
-                    sql_stmt.truncate(sql_stmt.len() - 2); // removes trailing ", "
-                    sql_stmt.push(';');
-                    sql_stmt
-                }.as_str())
                 $(
-                    .bind(&$structure.$attr)
+                    let setting = format!("{} = EXCLUDED.{}", stringify!($attr), stringify!($attr));
+                    sql_stmt.push_str(&setting);
+                    sql_stmt.push_str(", ");
                 )+
-            }
+
+                sql_stmt.truncate(sql_stmt.len() - 2); // removes trailing ", "
+                sql_stmt.push(';');
+                sql_stmt
+            }.as_str())
+            $(
+                .bind(&$structure.$attr)
+            )+
         }
     };
 }

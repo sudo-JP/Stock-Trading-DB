@@ -27,9 +27,6 @@ pub fn validate_order(order: &Order) -> Result<(), Error> {
         return Err(Error::Protocol("Order type is empty".into()));
     }
 
-    if order.filled_qty < 0 {
-        return Err(Error::Protocol("Filled quantity cannot be negative".into()));
-    }
 
     if order.filled_avg_price < 0.0 {
         return Err(Error::Protocol("Filled average price cannot be negative".into()));
@@ -58,7 +55,7 @@ impl CppController<Order, CppResult<Order>> for OrderController {
                 self.repo.insert(&model).await?;
             } 
             SQLCommand::UPDATE => {
-                self.repo.update(&model).await?;
+                //self.repo.update(&model).await?;
             }
             SQLCommand::DELETE => {
                 self.repo.delete_order_id(&model.order_id).await?;
